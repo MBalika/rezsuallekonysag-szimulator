@@ -357,15 +357,17 @@ function computeF(circle,n){
   if(!circle) return null;
   var xc=circle.xc, yc=circle.yc, R=circle.R, g=geom();
   // a csúszótömeg x-tartománya: ahol az alsó ív a felszín alatt van
-  var x0=xc-R, x1=Math.min(g.end,xc+R);
+  var x0=Math.max(g.crestX,xc-R), x1=Math.min(g.end,xc+R);
   if(x1-x0<=0.3) return null;
-  // finom letapogatás a valódi belépő/kilépő pontért
-  var lo=null,hi=null, step=(x1-x0)/400;
-  for(var x=x0;x<=x1;x+=step){
-    var dd=R*R-(x-xc)*(x-xc); if(dd<=0) continue;
-    var yb=yc-Math.sqrt(dd);
-    if(yb < ground(x)-1e-6){ if(lo===null)lo=x; hi=x; }
+  // a LEGSZÉLESEBB összefüggő szakasz, ahol az ív a felszín alatt van (= a valódi csúszótömeg)
+  var step=(x1-x0)/500, curStart=null, lo=null, hi=null;
+  for(var x=x0;x<=x1+1e-9;x+=step){
+    var dd=R*R-(x-xc)*(x-xc);
+    var below = (dd>0) && (yc-Math.sqrt(dd) < ground(x)-1e-6);
+    if(below){ if(curStart===null) curStart=x; }
+    else if(curStart!==null){ if(lo===null||(x-curStart)>(hi-lo)){lo=curStart;hi=x;} curStart=null; }
   }
+  if(curStart!==null && (lo===null||(x1-curStart)>(hi-lo))){lo=curStart;hi=x1;}
   if(lo===null||hi-lo<0.4*st.H) return null;
   var b=(hi-lo)/n, num=0,den=0, rows=[];
   for(var i=0;i<n;i++){
@@ -389,28 +391,20 @@ function computeF(circle,n){
 
 /* ============ Kritikus kör keresése ============ */
 function searchCritical(){
-  var g=geom(), best=null, bestAny=null, cands=[];
+  var g=geom(), best=null, cands=[];
   var xcs=[],ycs=[],Rs=[];
-  for(var k=0;k<13;k++) xcs.push(g.crestX-3 + (g.run+8)*k/12);
-  for(var j=0;j<10;j++) ycs.push(g.H*0.9 + g.H*1.9*j/9);
-  for(var m=0;m<14;m++) Rs.push(g.H*0.7 + g.H*2.7*m/13);
-  var loMin=g.crestX-0.20*g.run, loMax=g.crestX+0.35*g.run; // a belépés a koronaél környékén legyen
+  for(var k=0;k<12;k++) xcs.push(g.crestX-2 + (g.toeX-g.crestX+5)*k/11);
+  for(var j=0;j<10;j++) ycs.push(g.H*1.0 + g.H*1.8*j/9);
+  for(var m=0;m<13;m++) Rs.push(g.H*0.8 + g.H*2.4*m/12);
   for(var a=0;a<xcs.length;a++)for(var bb=0;bb<ycs.length;bb++)for(var cc=0;cc<Rs.length;cc++){
     var circle={xc:xcs[a],yc:ycs[bb],R:Rs[cc]};
-    if(circle.yc-circle.R > g.H*0.45) continue; // a kör érjen a rézsű aljához közel
+    if(circle.yc-circle.R > 0.5) continue;      // a kör érjen a talp közelébe
     var r=computeF(circle,12);
-    // csak valódi, megcsúsztató mechanizmus: pozitív nettó hajtóerő (den>0)
-    if(!r||!isFinite(r.F)||r.F<=0.1||r.F>10||r.den<=0.3) continue;
+    if(!r||!isFinite(r.F)||r.F<=0.05||r.F>8) continue; // pozitív hajtóerejű, valós mechanizmus
     circle.F=r.F; cands.push(circle);
-    if(!bestAny||r.F<bestAny.F) bestAny=circle;
-    if(r.lo>=loMin && r.lo<=loMax){ if(!best||r.F<best.F) best=circle; } // koronaél közelében belépő kör előnyben
+    if(!best||r.F<best.F) best=circle;
   }
-  if(!best && !bestAny){
-    // tartalék: koronaélen és lábon átmenő kör, hogy mindig legyen mit mutatni
-    var mx=(g.crestX+g.toeX)/2, cy=g.H+g.run*0.45, RR=Math.sqrt((mx-g.crestX)*(mx-g.crestX)+(cy-g.H)*(cy-g.H));
-    bestAny={xc:mx,yc:cy,R:RR};
-  }
-  return {best:best||bestAny, cands:cands};
+  return {best:best, cands:cands};
 }
 
 /* ============ Rajz ============ */
@@ -426,9 +420,8 @@ function fitView(){
   var wx0=-1, wx1=g.end+1, wy0=-(st.H*0.55), wy1=st.H*1.35;
   if(st.circle){
     var c=st.circle, cb=c.yc-c.R-0.6; if(cb<wy0) wy0=cb;
-    // bal belépés a felső teraszon (y=H) és jobb kilépés a lábnál (y=0) — hogy a teljes csúszólap beférjen
-    var dL=c.R*c.R-(c.yc-g.H)*(c.yc-g.H); if(dL>0){ var xL=c.xc-Math.sqrt(dL); if(xL-1<wx0) wx0=xL-1; }
-    var dR=c.R*c.R-c.yc*c.yc; if(dR>0){ var xR=c.xc+Math.sqrt(dR); if(xR+1>wx1) wx1=xR+1; }
+    // a tényleges csúszólap-szakasz (belépéstől kilépésig) férjen be vízszintesen
+    if(c._lo!==undefined){ if(c._lo-1<wx0) wx0=c._lo-1; if(c._hi+1>wx1) wx1=c._hi+1; }
   }
   var cw=cv.width/2, ch=cv.height/2, pad=14;
   var sx=(cw-2*pad)/(wx1-wx0), sy=(ch-2*pad)/(wy1-wy0);
@@ -566,6 +559,7 @@ function updateTable(r){
 function recompute(){
   if(!st.circle){ var s=searchCritical(); st.circle=s.best; }
   var r=st.circle?computeF(st.circle,st.n):null;
+  if(st.circle && r){ st.circle._lo=r.lo; st.circle._hi=r.hi; }
   setVerdict(r?r.F:null); updateFormula(r); updateTable(r);
   if(!st.sliding) fitView();
   draw();
