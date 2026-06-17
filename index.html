@@ -343,7 +343,7 @@ var st={H:10,beta:32,c:8,phi:26,gamma:19,n:12,
 /* Geometria (méter) */
 function geom(){
   var H=st.H, b=st.beta*Math.PI/180;
-  var crestX=9, run=H/Math.tan(b), toeX=crestX+run, end=toeX+Math.max(4,H*0.5);
+  var crestX=5, run=H/Math.tan(b), toeX=crestX+run, end=toeX+Math.max(3,H*0.35);
   return {H:H,crestX:crestX,toeX:toeX,end:end,run:run};
 }
 function ground(x){ var g=geom();
@@ -423,7 +423,7 @@ function resize(){
 }
 function fitView(){
   var g=geom();
-  var wx0=-1, wx1=g.end+1, wy0=-(st.H*0.55), wy1=st.H*1.35;
+  var wx0=-0.5, wx1=g.end+0.5, wy0=-(st.H*0.40), wy1=st.H*1.10;
   if(st.circle){
     var c=st.circle, cb=c.yc-c.R-0.6; if(cb<wy0) wy0=cb;
     // a tényleges csúszólap-szakasz (belépéstől kilépésig) férjen be vízszintesen
