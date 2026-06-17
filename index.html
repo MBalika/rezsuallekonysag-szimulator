@@ -389,20 +389,28 @@ function computeF(circle,n){
 
 /* ============ Kritikus kör keresése ============ */
 function searchCritical(){
-  var g=geom(), best=null, cands=[];
+  var g=geom(), best=null, bestAny=null, cands=[];
   var xcs=[],ycs=[],Rs=[];
-  for(var k=0;k<11;k++) xcs.push(g.crestX-2 + (g.toeX-g.crestX+4)*k/10);
-  for(var j=0;j<9;j++) ycs.push(g.H*1.0 + g.H*1.6*j/8);
-  for(var m=0;m<12;m++) Rs.push(g.H*0.8 + g.H*2.2*m/11);
+  for(var k=0;k<13;k++) xcs.push(g.crestX-3 + (g.run+8)*k/12);
+  for(var j=0;j<10;j++) ycs.push(g.H*0.9 + g.H*1.9*j/9);
+  for(var m=0;m<14;m++) Rs.push(g.H*0.7 + g.H*2.7*m/13);
+  var loMin=g.crestX-0.20*g.run, loMax=g.crestX+0.35*g.run; // a belépés a koronaél környékén legyen
   for(var a=0;a<xcs.length;a++)for(var bb=0;bb<ycs.length;bb++)for(var cc=0;cc<Rs.length;cc++){
     var circle={xc:xcs[a],yc:ycs[bb],R:Rs[cc]};
-    if(circle.yc-circle.R > 0.5) continue; // a körnek a talp alá kell érnie
-    var r=computeF(circle,10);
-    if(!r||!isFinite(r.F)||r.F<=0.05||r.F>8) continue;
+    if(circle.yc-circle.R > g.H*0.45) continue; // a kör érjen a rézsű aljához közel
+    var r=computeF(circle,12);
+    // csak valódi, megcsúsztató mechanizmus: pozitív nettó hajtóerő (den>0)
+    if(!r||!isFinite(r.F)||r.F<=0.1||r.F>10||r.den<=0.3) continue;
     circle.F=r.F; cands.push(circle);
-    if(!best||r.F<best.F) best=circle;
+    if(!bestAny||r.F<bestAny.F) bestAny=circle;
+    if(r.lo>=loMin && r.lo<=loMax){ if(!best||r.F<best.F) best=circle; } // koronaél közelében belépő kör előnyben
   }
-  return {best:best,cands:cands};
+  if(!best && !bestAny){
+    // tartalék: koronaélen és lábon átmenő kör, hogy mindig legyen mit mutatni
+    var mx=(g.crestX+g.toeX)/2, cy=g.H+g.run*0.45, RR=Math.sqrt((mx-g.crestX)*(mx-g.crestX)+(cy-g.H)*(cy-g.H));
+    bestAny={xc:mx,yc:cy,R:RR};
+  }
+  return {best:best||bestAny, cands:cands};
 }
 
 /* ============ Rajz ============ */
@@ -724,11 +732,11 @@ resize(); recompute();
 (function(){
   "use strict";
   var NBSP=' ', WJ='⁠';
-  function math(s){ return s.replace(/ (?=[=+−·×<>])/g,NBSP).replace(/([=+−·×<>]) /g,''+NBSP); }
-  function units(s){ return s.replace(/(\d) (?=(?:kPa|MPa|GPa|kN\/m³|kN\/m²|kN|m³|m²|m\/s|cm|mm|km|kg|°C|°|%|m|t|óra|nap|hét|hónap|év)(?:[\s.,;:!?)\]–—]|$))/g,''+NBSP); }
-  function shortWords(s){ return s.replace(/(^|[\s(„"'»–—])(a|az|s|e|é|és|is)(?: )(?=\S)/gi,''+NBSP); }
-  function dashes(s){ return s.replace(/([0-9A-Za-zÀ-ÿ])([-–—])([0-9A-Za-zÀ-ÿ])/g,''+WJ+''+WJ+''); }
-  function sentenceStart(s){ return s.replace(/([.!?…][)"'»”’]?\s+\S+) (?=\S)/g,''+NBSP); }
+  function math(s){ return s.replace(/ (?=[=+−·×<>])/g,NBSP).replace(/([=+−·×<>]) /g,'$1'+NBSP); }
+  function units(s){ return s.replace(/(\d) (?=(?:kPa|MPa|GPa|kN\/m³|kN\/m²|kN|m³|m²|m\/s|cm|mm|km|kg|°C|°|%|m|t|óra|nap|hét|hónap|év)(?:[\s.,;:!?)\]–—]|$))/g,'$1'+NBSP); }
+  function shortWords(s){ return s.replace(/(^|[\s(„"'»–—])(a|az|s|e|é|és|is)(?: )(?=\S)/gi,'$1$2'+NBSP); }
+  function dashes(s){ return s.replace(/([0-9A-Za-zÀ-ÿ])([-–—])([0-9A-Za-zÀ-ÿ])/g,'$1'+WJ+'$2'+WJ+'$3'); }
+  function sentenceStart(s){ return s.replace(/([.!?…][)"'»”’]?\s+\S+) (?=\S)/g,'$1'+NBSP); }
   function fix(s){ return dashes(units(math(shortWords(sentenceStart(s))))); }
   var SKIP={SCRIPT:1,STYLE:1,CODE:1,PRE:1,KBD:1,SAMP:1,INPUT:1,TEXTAREA:1,SELECT:1,OPTION:1,NOSCRIPT:1};
   function walk(el){
