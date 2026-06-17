@@ -443,11 +443,24 @@ function analyse(){
 /* ───────────────── VETÍTÉS + RAJZ ───────────────── */
 const SVGW=560, SVGH=380;
 function view(){
-  // egységes skála; az ablakot H-hoz kötjük, hogy a kör is beférjen
-  const ymax=S.H+4, ymin=-(0.95*S.H+4);
-  const hM=ymax-ymin, wM=hM*(SVGW/SVGH);
-  const xcen=xCrest()/2+2;
-  return{ymin,ymax,wM,xmin:xcen-wM/2,s:SVGW/wM};
+  // a nézet MINDIG mutasson mindent: terep + kör középpont (O) + a teljes csúszólap-ív
+  const xc0=xCrest();
+  let xmin=Math.min(xc0-3, S.xc-3, -2);
+  let xmax=Math.max(2+0.35*S.H, S.xc+3);
+  let ymin=Math.min(-0.15*S.H, 0);
+  let ymax=Math.max(S.H+3, S.yc+3);                 // a középpont (O) is beleférjen fölül
+  const it=intersections();
+  if(it){
+    xmin=Math.min(xmin,it.entry-2); xmax=Math.max(xmax,it.exit+2);
+    const low=(S.xc>=it.entry&&S.xc<=it.exit)?(S.yc-S.R):Math.min(yCirc(it.entry),yCirc(it.exit));
+    if(isFinite(low)) ymin=Math.min(ymin,low-1.5);  // az ív legmélyebb pontja is beleférjen
+  }
+  // a vászon arányának tartása (uniform skála, letterbox)
+  const aspect=SVGW/SVGH;
+  let wM=xmax-xmin, hM=ymax-ymin;
+  if(wM/hM>aspect){ const nh=wM/aspect, cy=(ymin+ymax)/2; ymin=cy-nh/2; ymax=cy+nh/2; hM=nh; }
+  else { const nw=hM*aspect, cx=(xmin+xmax)/2; xmin=cx-nw/2; xmax=cx+nw/2; wM=nw; }
+  return {xmin,ymin,xmax,ymax,wM,hM,s:SVGW/wM};
 }
 function P(x,y,v){return[(x-v.xmin)*v.s, SVGH-(y-v.ymin)*v.s];}
 
