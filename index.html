@@ -1,603 +1,676 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="hu">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-<meta http-equiv="Pragma" content="no-cache" />
-<meta http-equiv="Expires" content="0" />
-<title>Rézsűállékonyság-szimulátor — lamellás módszer (Fellenius &amp; Bishop)</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rézsűállékonyság — Fellenius & Bishop · Interaktív segédanyag</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fraunces:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Inter:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
-  --steel:#7C5A38; --steel-dk:#3A2A1A; --concrete:#A99B86; --concrete-lt:#D8D0C2;
-  --rebar:#C0512A; --rebar-dk:#8F3A1B; --azure:#2E7D8A; --azure-dk:#1F5560; --moss:#5C7A52; --gold:#D7A33C;
-  --bg:#F6F3EE; --paper:#FFFFFF; --panel-2:#F3EEE6; --ink:#241C12; --ink-mute:#6B6052;
-  --line:#E2DBD0; --line-strong:#C4BAAB;
-  --slip:#C0512A; --accent:#2E7D8A; --water:#2E7D8A;
-  --safe:#3E5A1F; --warn:#9A6A12; --danger:#8F3A1B;
-  --shadow:0 1px 2px rgba(58,42,26,0.06), 0 8px 24px rgba(58,42,26,0.08);
-  --radius:14px; --radius-sm:8px;
+  --paper:#eef3f1;
+  --card:#f9fbfa;
+  --grid:rgba(13,90,80,0.055);
+  --line:#d3dedb;
+  --ink:#0d272b;
+  --ink2:#34514f;
+  --ink3:#64807d;
+  --accent:#0e7c6b;
+  --accent-soft:#dcefe9;
+  --water:#1b6fae;
+  --water-soft:#ddeaf6;
+  --toe:#c2521f;       /* rézsűláb-kör */
+  --toe-soft:#f7e2d5;
+  --slope:#b87514;     /* rézsűkör */
+  --slope-soft:#f5e7cf;
+  --base:#2f59c4;      /* talpkör */
+  --base-soft:#dde3f7;
+  --soil:#e3d9c6;
+  --soil-line:#b9a888;
+  --danger:#a32626;
+  --ok:#2e7d4f;
+  --display:'Archivo',system-ui,sans-serif;
+  --body:'Inter',system-ui,sans-serif;
+  --mono:'JetBrains Mono',monospace;
 }
-*{box-sizing:border-box}
-html,body{margin:0;padding:0}
-body{background:var(--bg);color:var(--ink);font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
-h1,h2,h3,h4{font-family:'Fraunces',Georgia,serif;font-weight:600;color:var(--ink);letter-spacing:-0.01em}
-h1{font-size:2.4rem;line-height:1.15;margin:0 0 .4em}
-h2{font-size:1.7rem;margin:1.4em 0 .6em;border-bottom:1px solid var(--line);padding-bottom:.3em}
-h3{font-size:1.2rem;margin:1.2em 0 .4em;color:var(--steel-dk)}
-p{margin:.7em 0}
-code,.mono{font-family:'JetBrains Mono',Menlo,monospace;font-size:0.92em}
-sub,sup{line-height:0}
-.brandbar{background:var(--steel-dk);color:#EFE7DA}
-.brandbar .wrap{max-width:1240px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
-.brandbar .lhs{display:flex;align-items:center;gap:14px}
-.brand-mark{width:36px;height:36px;background:var(--rebar);border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'Fraunces';font-weight:700;font-size:1.05em;color:#fff;letter-spacing:-0.04em}
-.brand-text{display:flex;flex-direction:column;line-height:1.15}
-.brand-text .uni{font-size:0.78rem;text-transform:uppercase;letter-spacing:0.12em;opacity:0.75}
-.brand-text .course{font-family:'Fraunces';font-weight:600;font-size:1.05rem;color:#fff}
-.pill{background:rgba(255,255,255,.08);padding:5px 12px;border-radius:99px;font-size:0.78rem;letter-spacing:0.04em}
-.pill.rebar{background:var(--rebar);color:#fff;font-weight:500}
-.chaptertabs{background:var(--paper);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:50;box-shadow:0 1px 0 rgba(0,0,0,0.02)}
-.chaptertabs .wrap{max-width:1240px;margin:0 auto;padding:0 24px;display:flex;gap:4px;overflow-x:auto;scrollbar-width:thin}
-.chaptertabs button{background:transparent;border:none;padding:14px 16px;cursor:pointer;font-family:'Inter';font-size:0.92rem;color:var(--ink-mute);border-bottom:3px solid transparent;white-space:nowrap;font-weight:500}
-.chaptertabs button:hover{color:var(--steel-dk)}
-.chaptertabs button.active{color:var(--steel-dk);border-bottom-color:var(--rebar);font-weight:600}
-.chaptertabs .ch-num{display:inline-block;width:22px;height:22px;border-radius:50%;background:var(--concrete-lt);font-size:0.72rem;line-height:22px;text-align:center;margin-right:8px;color:var(--ink-mute);font-weight:600;font-variant-numeric:tabular-nums}
-.chaptertabs button.active .ch-num{background:var(--rebar);color:#fff}
-main{max-width:1240px;margin:0 auto;padding:28px 24px 70px}
-.hero{background:linear-gradient(135deg,var(--steel) 0%,var(--steel-dk) 70%,#241810 100%);color:#EFE7DA;border-radius:var(--radius);padding:38px 42px;margin-bottom:24px;position:relative;overflow:hidden;box-shadow:var(--shadow)}
-.hero::after{content:"";position:absolute;right:-80px;bottom:-80px;width:280px;height:280px;background:radial-gradient(circle,var(--azure) 0%,transparent 70%);opacity:0.30;border-radius:50%}
-.hero h1{color:#fff;font-size:2.4rem;margin-bottom:.2em}
-.hero .subtitle{font-size:1.05rem;opacity:0.9;font-weight:300;max-width:680px}
-.hero .meta{display:flex;gap:24px;margin-top:20px;flex-wrap:wrap;font-size:0.85rem;opacity:0.88}
-.hero .meta b{color:var(--gold);font-weight:600}
-.panel{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:22px 26px;margin:18px 0;box-shadow:var(--shadow)}
-.panel h2:first-child,.panel h3:first-child{margin-top:0}
-.callout{background:linear-gradient(180deg,#F4EFE7,#EBE3D6);border-left:4px solid var(--steel);padding:14px 18px;border-radius:0 var(--radius-sm) var(--radius-sm) 0;margin:14px 0;font-size:0.95rem}
-.callout.formula{background:#F1EEE7;border-left-color:var(--azure);font-family:'JetBrains Mono';font-size:0.92rem;line-height:1.85}
-.callout.note{background:#F4F1EB;border-left-color:var(--concrete)}
-.callout.success{background:linear-gradient(180deg,#E8F1E3,#D6E5CE);border-left-color:var(--moss)}
-.callout.success b{color:var(--safe)}
-.inline-math{font-family:'JetBrains Mono';background:#F1EEE7;padding:1px 6px;border-radius:4px;font-size:0.92em;color:var(--steel-dk)}
-ul.bullet{list-style:none;padding-left:0}
-ul.bullet li{padding:4px 0 4px 22px;position:relative}
-ul.bullet li::before{content:"";position:absolute;left:6px;top:13px;width:6px;height:6px;background:var(--steel);border-radius:50%}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
-@media(max-width:880px){.grid2{grid-template-columns:1fr}}
-.chapter-page{display:none}
-.chapter-page.active{display:block}
-.foot{margin-top:50px;padding:22px 26px;background:var(--steel-dk);color:#CDC2B2;font-size:0.84rem;text-align:center;border-radius:var(--radius)}
-.foot b{color:var(--gold)}
-table.dt{width:100%;border-collapse:collapse;font-size:0.92rem}
-table.dt th{background:var(--steel);color:#fff;padding:8px 11px;text-align:left;font-weight:600}
-table.dt td{padding:7px 11px;border-bottom:1px solid var(--line)}
-table.dt tr:nth-child(even) td{background:#F8F5F0}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--body);background:var(--paper);color:var(--ink);font-size:16px;line-height:1.7}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:28px 28px;}
+main{position:relative;z-index:1}
 
-/* ===== Simulator ===== */
-.simgrid{display:grid;grid-template-columns:1fr 320px;gap:18px;align-items:start}
-.simrow{display:grid;grid-template-columns:1fr 1fr 1.3fr;gap:18px;margin-top:18px;align-items:start}
-@media(max-width:980px){.simgrid,.simrow{grid-template-columns:1fr}}
-.stage{position:relative;background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
-canvas{display:block;width:100%;height:auto;touch-action:none;cursor:grab;background:#EEF4F2}
-canvas.dragging{cursor:grabbing}
-.verdict{position:absolute;top:14px;left:14px;display:flex;gap:10px;flex-wrap:wrap}
-.fscard{background:rgba(255,255,255,.93);backdrop-filter:blur(4px);border:1px solid var(--line);border-radius:12px;padding:9px 14px;min-width:116px;box-shadow:0 2px 10px rgba(58,42,26,.12)}
-.fscard .lab{font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-mute);font-weight:600}
-.fscard .val{font-family:'Fraunces';font-weight:700;font-size:28px;line-height:1;margin-top:3px;font-variant-numeric:tabular-nums}
-.fscard .tag{font-size:11px;font-weight:600;margin-top:2px}
-.invalid{position:absolute;inset:auto 14px 14px 14px;background:rgba(143,58,27,.95);color:#fff;padding:9px 13px;border-radius:10px;font-size:13px;font-weight:500;display:none}
-.cpanel{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:2px 16px 14px}
-.grp{padding:11px 0;border-bottom:1px solid var(--line)}
-.grp:last-child{border-bottom:none}
-.grp h4{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--rebar);margin:0 0 10px;font-weight:700;font-family:'Inter';display:flex;align-items:center;gap:8px}
-.grp h4::before{content:"";width:7px;height:7px;background:var(--rebar);transform:rotate(45deg);display:inline-block}
-.grp h4 .alap{margin-left:auto;background:var(--gold);color:#3A2A1A;font-size:0.6rem;font-weight:700;letter-spacing:.04em;padding:2px 7px;border-radius:99px;text-transform:none}
-.ctrl{margin:9px 0}
-.ctrl .row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px}
-.ctrl label{font-size:13px;font-weight:500}
-.ctrl .v{font-family:'JetBrains Mono';font-size:13px;font-weight:700;color:var(--steel-dk);font-variant-numeric:tabular-nums}
-input[type=range]{width:100%;height:4px;-webkit-appearance:none;appearance:none;background:var(--line-strong);border-radius:3px;outline:none}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:17px;height:17px;border-radius:50%;background:var(--rebar);cursor:pointer;border:2.5px solid #fff;box-shadow:0 1px 3px rgba(58,42,26,.3)}
-input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--rebar);cursor:pointer;border:2.5px solid #fff}
-input[type=range].water::-webkit-slider-thumb{background:var(--azure)}
-.seg{display:flex;border:1px solid var(--line-strong);border-radius:9px;overflow:hidden}
-.seg button{flex:1;border:none;background:var(--panel-2);padding:8px 4px;font-size:12.5px;font-weight:600;color:var(--ink-mute);cursor:pointer;font-family:inherit;border-right:1px solid var(--line)}
-.seg button:last-child{border-right:none}
-.seg button[aria-pressed=true]{background:var(--steel);color:#fff}
-.btnrow{display:flex;gap:8px;flex-wrap:wrap}
-.btn{flex:1;min-width:0;border:1px solid var(--line-strong);background:var(--panel-2);border-radius:9px;padding:9px 8px;font-size:12.5px;font-weight:600;color:var(--ink);cursor:pointer;font-family:inherit}
-.btn:hover{background:#fff;border-color:var(--rebar)}
-.btn.primary{background:var(--rebar);color:#fff;border-color:var(--rebar)}
-.btn.primary:hover{background:var(--rebar-dk)}
-.presets{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.chk{display:flex;align-items:center;gap:9px;font-size:13px;cursor:pointer;margin:9px 0}
-.chk input{width:16px;height:16px;accent-color:var(--rebar);cursor:pointer}
-.below{margin-top:20px;display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
-@media(max-width:980px){.below{grid-template-columns:1fr}}
-.card{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px}
-.card h3{font-size:14px;margin:0 0 12px;font-weight:600}
-.eq{font-family:'JetBrains Mono';font-size:12.5px;line-height:1.8;background:var(--panel-2);border:1px solid var(--line);border-radius:9px;padding:12px 14px;overflow-x:auto}
-.eq .hl{color:var(--rebar);font-weight:700}
-.eq.dim{opacity:.42}
-.eqnote{font-size:12px;color:var(--ink-mute);margin-top:10px;line-height:1.5}
-.tablewrap{max-height:300px;overflow:auto;border:1px solid var(--line);border-radius:9px}
-.stable{width:100%;border-collapse:collapse;font-family:'JetBrains Mono';font-size:11.5px}
-.stable th,.stable td{text-align:right;padding:5px 7px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums;white-space:nowrap}
-.stable th{color:#fff;background:var(--steel);font-weight:600;font-size:10px;letter-spacing:.04em;text-transform:uppercase;position:sticky;top:0}
-.stable td:first-child,.stable th:first-child{text-align:center}
-.scn{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:10px 0}
-.scn button{text-align:left;background:var(--paper);border:1px solid var(--line-strong);border-radius:10px;padding:12px 14px;cursor:pointer}
-.scn button:hover{border-color:var(--rebar);box-shadow:var(--shadow);transform:translateY(-2px)}
-.scn .t{font-weight:700;font-size:0.92rem;color:var(--steel-dk);display:block}
-.scn .d{font-size:0.78rem;color:var(--ink-mute)}
-.quiz{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:18px 22px;margin:14px 0;box-shadow:var(--shadow)}
-.quiz .q{font-weight:600;margin-bottom:8px}
-.quiz .opt{display:block;width:100%;text-align:left;background:#F8F5F0;border:1px solid var(--line);border-radius:8px;padding:9px 13px;margin:6px 0;cursor:pointer;font-size:0.92rem}
-.quiz .opt:hover{border-color:var(--steel)}
-.quiz .opt.right{background:#D6E5CE;border-color:var(--moss);color:var(--safe);font-weight:600}
-.quiz .opt.wrong{background:#EFC9B5;border-color:var(--rebar);color:#6B2F12}
-.quiz .exp{font-size:0.86rem;color:var(--ink-mute);margin-top:6px;display:none}
-.quiz .exp.show{display:block}
-.legend{display:flex;flex-wrap:wrap;gap:10px 16px;font-size:12px;color:var(--ink-mute);margin:8px 2px 0}
-.legend span{display:inline-flex;align-items:center;gap:6px}
-.legend i{width:13px;height:13px;border-radius:3px;display:inline-block}
-.legend i.line{height:3px;width:18px;border-radius:2px}
+nav{position:sticky;top:0;z-index:300;height:54px;background:rgba(238,243,241,0.94);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 1.4rem;gap:1.6rem;}
+.nav-logo{font-family:var(--display);font-weight:800;font-size:14px;letter-spacing:.06em;color:var(--accent);white-space:nowrap;text-transform:uppercase}
+.nav-links{display:flex;overflow-x:auto;scrollbar-width:none}
+.nav-links::-webkit-scrollbar{display:none}
+.nav-link{padding:0 12px;height:54px;display:flex;align-items:center;font-size:13.5px;font-weight:500;color:var(--ink3);
+  text-decoration:none;border-bottom:2px solid transparent;white-space:nowrap;transition:color .2s,border-color .2s;}
+.nav-link:hover{color:var(--ink)}
+.nav-link.active{color:var(--accent);border-bottom-color:var(--accent)}
+
+header.hero{position:relative;z-index:1;max-width:1040px;margin:0 auto;padding:4.5rem 1.5rem 3rem;}
+.hero-eyebrow{font-family:var(--mono);font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:1rem;}
+.hero h1{font-family:var(--display);font-weight:900;letter-spacing:-0.015em;font-size:clamp(2.4rem,6.5vw,4.3rem);line-height:1.02;color:var(--ink);text-transform:uppercase;}
+.hero h1 .thin{font-weight:600;color:var(--ink3)}
+.hero-sub{max-width:640px;margin-top:1.3rem;font-size:1.06rem;color:var(--ink2)}
+.hero-eq{margin-top:2rem;max-width:640px;font-family:var(--mono);font-size:1.15rem;color:var(--ink);background:var(--card);
+  border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:8px;padding:1rem 1.2rem;}
+.hero-eq small{display:block;font-family:var(--body);color:var(--ink3);font-size:.85rem;margin-top:.5rem}
+
+section{max-width:1040px;margin:0 auto;padding:3.2rem 1.5rem 1rem}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);
+  display:flex;align-items:center;gap:.7rem;margin-bottom:.7rem;}
+.eyebrow::after{content:'';height:1px;flex:1;background:var(--line)}
+h2{font-family:var(--display);font-weight:800;font-size:clamp(1.5rem,3.4vw,2.1rem);letter-spacing:-.01em;margin-bottom:1rem}
+h3{font-family:var(--display);font-weight:700;font-size:1.12rem;margin:1.6rem 0 .5rem}
+p{margin-bottom:1rem;color:var(--ink2)}
+p strong{color:var(--ink)}
+.lead{font-size:1.05rem}
+
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin:1.4rem 0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:1.1rem 1.2rem}
+.card h4{font-family:var(--display);font-weight:700;font-size:.98rem;margin-bottom:.4rem;display:flex;align-items:center;gap:.5rem}
+.card p{font-size:.92rem;margin:0;color:var(--ink2)}
+.dot{width:10px;height:10px;border-radius:50%;flex:none}
+.dot.toe{background:var(--toe)} .dot.slope{background:var(--slope)} .dot.base{background:var(--base)} .dot.accent{background:var(--accent)}
+
+.formula{font-family:var(--mono);background:var(--card);border:1px solid var(--line);border-left:3px solid var(--accent);
+  border-radius:8px;padding:.9rem 1.2rem;margin:1.2rem 0;font-size:.98rem;overflow-x:auto;}
+.formula small{display:block;font-family:var(--body);color:var(--ink3);font-size:.82rem;white-space:normal;margin-top:.4rem}
+.f-acc{color:var(--accent);font-weight:600} .f-water{color:var(--water);font-weight:600}
+
+.note{background:var(--accent-soft);border:1px solid #bcdcd2;border-radius:10px;padding:.9rem 1.2rem;margin:1.2rem 0;font-size:.95rem;color:var(--ink2);}
+.note strong{color:var(--accent)}
+.note.warn{background:var(--toe-soft);border-color:#e7c4ab}
+.note.warn strong{color:var(--toe)}
+
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:1.4rem;margin:1.6rem 0;box-shadow:0 2px 14px rgba(13,39,43,0.05);}
+.panel-title{font-family:var(--display);font-weight:700;font-size:1.02rem;margin-bottom:.2rem}
+.panel-sub{font-size:.88rem;color:var(--ink3);margin-bottom:1rem}
+
+.sim{display:grid;grid-template-columns:1.35fr 1fr;gap:1.2rem;align-items:start}
+@media(max-width:860px){.sim{grid-template-columns:1fr}}
+.svg-wrap{background:#fff;border:1px solid var(--line);border-radius:10px;padding:.4rem;overflow:hidden}
+.svg-wrap svg{display:block;width:100%;height:auto;touch-action:none}
+
+.ctrl{display:flex;flex-direction:column;gap:.25rem;margin-bottom:.7rem}
+.ctrl label{font-family:var(--mono);font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink3);display:flex;justify-content:space-between}
+.ctrl label .val{color:var(--ink);font-weight:600}
+input[type=range]{width:100%;accent-color:var(--accent);height:24px}
+.ctrl-grid{display:grid;grid-template-columns:1fr 1fr;gap:.3rem 1rem}
+.ctrl-grid .ctrl{margin-bottom:.4rem}
+
+.btn{font-family:var(--display);font-weight:700;font-size:.9rem;letter-spacing:.02em;padding:.55rem 1rem;border-radius:8px;
+  border:1px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer;transition:transform .1s,opacity .2s;}
+.btn:hover{opacity:.92}.btn:active{transform:scale(.97)}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--water);outline-offset:2px}
+.btn-row{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.4rem}
+
+.result-grid{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin:.2rem 0 1rem}
+.res{border:1px solid var(--line);border-radius:10px;padding:.7rem .9rem;background:#fff}
+.res .res-lab{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3)}
+.res .res-val{font-family:var(--display);font-weight:900;font-size:1.9rem;line-height:1.1;margin-top:.2rem}
+.res.fell .res-val{color:var(--toe)} .res.bish .res-val{color:var(--accent)}
+.res .res-sub{font-size:.78rem;color:var(--ink3);margin-top:.1rem}
+
+.statusbar{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:.8rem}
+.chip{font-family:var(--mono);font-size:12px;border:1px solid var(--line);border-radius:8px;background:#fff;padding:.4rem .65rem;color:var(--ink2);}
+.chip b{color:var(--ink);font-weight:600}
+.chip.type-toe{border-color:var(--toe);background:var(--toe-soft)} .chip.type-toe b{color:var(--toe)}
+.chip.type-slope{border-color:var(--slope);background:var(--slope-soft)} .chip.type-slope b{color:var(--slope)}
+.chip.type-base{border-color:var(--base);background:var(--base-soft)} .chip.type-base b{color:var(--base)}
+.chip.bad{border-color:var(--danger);background:#f7e3e3;color:var(--danger)}
+.fbadge{display:inline-block;font-family:var(--mono);font-size:11px;padding:.15rem .5rem;border-radius:6px;font-weight:600}
+.fbadge.safe{background:#e2f1e8;color:var(--ok)} .fbadge.unsafe{background:#f7e3e3;color:var(--danger)}
+
+table{width:100%;border-collapse:collapse;margin:1.2rem 0;font-size:.92rem;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+th,td{padding:.5rem .8rem;border-bottom:1px solid var(--line);text-align:center;font-family:var(--mono);font-size:.85rem}
+th{background:var(--accent-soft);color:var(--ink);font-family:var(--display);font-weight:700;font-size:.82rem;letter-spacing:.02em}
+tr:last-child td{border-bottom:none}
+
+.quiz-box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:1.6rem;margin:1.6rem 0}
+.quiz-progress{font-family:var(--mono);font-size:12.5px;color:var(--ink3);margin-bottom:.8rem;display:flex;justify-content:space-between}
+.quiz-q{font-family:var(--display);font-weight:700;font-size:1.12rem;margin-bottom:1.1rem}
+.quiz-opts{display:grid;gap:.6rem}
+.quiz-opt{text-align:left;font-family:var(--body);font-size:.96rem;padding:.75rem 1rem;border:1px solid var(--line);border-radius:10px;background:#fff;cursor:pointer;color:var(--ink2);transition:border-color .15s,background .15s;}
+.quiz-opt:hover:not(:disabled){border-color:var(--accent);background:var(--accent-soft)}
+.quiz-opt:disabled{cursor:default}
+.quiz-opt.correct{border-color:var(--ok);background:#e2f1e8;color:var(--ink);font-weight:600}
+.quiz-opt.wrong{border-color:var(--danger);background:#f7e3e3;color:var(--ink)}
+.quiz-expl{margin-top:1rem;padding:.9rem 1.1rem;border-radius:10px;background:var(--water-soft);border:1px solid #bcd4ea;font-size:.93rem;color:var(--ink2);display:none}
+.quiz-expl.show{display:block}.quiz-expl b{color:var(--water)}
+.quiz-next{margin-top:1.1rem;display:none}.quiz-next.show{display:inline-block}
+.quiz-result{text-align:center;display:none}.quiz-result.show{display:block}
+.quiz-score{font-family:var(--display);font-weight:900;font-size:3.4rem;color:var(--accent);line-height:1.1}
+.quiz-msg{font-size:1.02rem;color:var(--ink2);margin:.6rem 0 1.4rem}
+.progress-track{height:6px;border-radius:3px;background:var(--line);overflow:hidden;margin-bottom:1.2rem}
+.progress-fill{height:100%;background:var(--accent);width:0;transition:width .3s}
+
+footer{max-width:1040px;margin:3rem auto 0;padding:2rem 1.5rem 3rem;border-top:1px solid var(--line);font-size:.85rem;color:var(--ink3);font-family:var(--mono);}
+
+.reveal{opacity:0;transform:translateY(16px);transition:opacity .6s ease,transform .6s ease}
+.reveal.in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.reveal{opacity:1;transform:none;transition:none}}
+@media(max-width:600px){section{padding:2.4rem 1.1rem .6rem}header.hero{padding:3rem 1.1rem 2rem}nav{padding:0 .9rem;gap:.9rem}.result-grid{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
+<nav>
+  <span class="nav-logo">Rézsűállékonyság</span>
+  <div class="nav-links">
+    <a class="nav-link" href="#alap">Alapok</a>
+    <a class="nav-link" href="#lamella">Lamellás módszer</a>
+    <a class="nav-link" href="#fellenius">Fellenius</a>
+    <a class="nav-link" href="#bishop">Bishop</a>
+    <a class="nav-link" href="#tipusok">Kifutási típusok</a>
+    <a class="nav-link" href="#szimulator">Szimulátor</a>
+    <a class="nav-link" href="#kviz">Kvíz</a>
+  </div>
+</nav>
 
-<header class="brandbar">
-  <div class="wrap">
-    <div class="lhs">
-      <div class="brand-mark">B</div>
-      <div class="brand-text">
-        <span class="uni">BME · Építőmérnöki Kar · Geotechnika és Mérnökgeológia Tanszék</span>
-        <span class="course">Rézsűállékonyság · lamellás módszer (Fellenius &amp; Bishop)</span>
-      </div>
-    </div>
-    <div class="rhs"><span class="pill rebar">interaktív szimulátor</span></div>
+<header class="hero">
+  <div class="hero-eyebrow">Talajmechanika · Interaktív segédanyag</div>
+  <h1>Rézsűállékonyság<br><span class="thin">— Fellenius & Bishop</span></h1>
+  <p class="hero-sub">Mikor csúszik meg a domboldal? A körhengeres lamellás módszer a csúszó tömeget szeletekre bontja, és a hajtó meg az ellenálló nyomatékok hányadosából adja a <strong>biztonsági tényezőt</strong>. Lent élő szimulátorban húzhatod a csúszókört, és nézheted, hogyan reagál a Fellenius- és a Bishop-féle F.</p>
+  <div class="hero-eq">F = M<sub>ellenálló</sub> / M<sub>hajtó</sub>
+    <small>A biztonsági tényező a csúszást megtartó és a csúszást előidéző nyomatékok aránya. F &lt; 1 → a rézsű elméletileg megcsúszik; a gyakorlatban F ≥ 1,3–1,5 az elvárt.</small>
   </div>
 </header>
 
-<nav class="chaptertabs"><div class="wrap" id="chTabs">
-  <button class="active" data-target="page-bev"><span class="ch-num">0</span>Bevezetés</button>
-  <button data-target="page-modszer"><span class="ch-num">1</span>A módszer</button>
-  <button data-target="page-sim"><span class="ch-num">2</span>Szimulátor</button>
-  <button data-target="page-kviz"><span class="ch-num">3</span>Kvíz</button>
-</div></nav>
-
 <main>
 
-<!-- ===== BEVEZETÉS ===== -->
-<div class="chapter-page active" id="page-bev">
-  <div class="hero">
-    <h1>Mikor csúszik meg a&nbsp;domboldal?</h1>
-    <p class="subtitle">Rézsűállékonyság körhengeres csúszólappal, függőleges lamellákra bontva. Hasonlítsd össze a&nbsp;<b>Fellenius</b> (közönséges) és&nbsp;a&nbsp;<b>Bishop egyszerűsített</b> módszer biztonsági tényezőjét — a&nbsp;talaj nyírószilárdsági paramétereiből (c′, φ′), a&nbsp;geometriából és&nbsp;a&nbsp;pórusvíznyomásból.</p>
-    <div class="meta">
-      <span><b>Tárgy</b> Geotechnika · Alapozás BSc</span>
-      <span><b>Módszer</b> lamellás (method of slices)</span>
-      <span><b>Cél</b> F = ellenállás / megcsúsztató</span>
-    </div>
+<section id="alap" class="reveal">
+  <div class="eyebrow">1 · Alapfogalmak</div>
+  <h2>Mi a rézsűállékonyság?</h2>
+  <p class="lead">Egy megtámasztatlan földtömegnek a <strong>saját súlyát, a felszíni terheket és a víznyomást</strong> kell elviselnie. A csúszással szembeni ellenállást a feltételezett csúszólap mentén a talaj <strong>nyírószilárdsága</strong> adja. A feladat: felvenni a lehetséges csúszólapot, és meghatározni a hozzá tartozó biztonsági tényezőt.</p>
+  <div class="cards">
+    <div class="card"><h4><span class="dot accent"></span>Hajtóerő</h4><p>A csúszó tömeg súlyának a csúszólap menti komponense — ez igyekszik megindítani a csúszást (W·sinα).</p></div>
+    <div class="card"><h4><span class="dot accent"></span>Ellenálló erő</h4><p>A nyírószilárdság a csúszólap mentén: a kohézió (c') és a normálfeszültségből származó súrlódás (tanφ') együtt.</p></div>
+    <div class="card"><h4><span class="dot accent"></span>Mohr–Coulomb</h4><p>τ = c' + σ'·tanφ'. A nyírószilárdság a hatékony normálfeszültségtől függ — a pórusvíznyomás csökkenti azt.</p></div>
   </div>
+  <p>A csúszás akkor indul meg, amikor a hajtóerők meghaladják az ellenálló erőket. Ezt billentheti át a <strong>rézsű meredekítése, a láb alámetszése, a terhelés növelése</strong> a koronán, vagy a <strong>pórusvíznyomás megemelkedése</strong> (eső, beszivárgás) — utóbbi csökkenti a hatékony feszültséget, és vele a súrlódási ellenállást.</p>
+</section>
+
+<section id="lamella" class="reveal">
+  <div class="eyebrow">2 · A közös keret</div>
+  <h2>A lamellás módszer</h2>
+  <p class="lead">Körhengeres csúszólapot tételezünk fel, és a fölötte lévő tömeget egyenlő szélességű <strong>függőleges lamellákra</strong> osztjuk. Minden lamellára felírjuk az erőket, majd a forgásközéppontra a nyomatéki egyensúlyt — innen adódik F.</p>
+  <p>A nehézség: kettőnél több lamellára a feladat <strong>statikailag határozatlan</strong> — több az ismeretlen, mint az egyenlet. A különböző módszerek abban térnek el, milyen feltevést tesznek a <strong>lamellaközi (interlamelláris) erőkre</strong>. A két klasszikus, máig használt eljárás a Fellenius (1936) és a Bishop (1955).</p>
+  <h3>Egy lamella jelölései</h3>
+  <table>
+    <thead><tr><th>Jel</th><th>Jelentés</th><th>Jel</th><th>Jelentés</th></tr></thead>
+    <tbody>
+      <tr><td>W</td><td>lamella súlya = γ·b·h</td><td>α</td><td>a talp dőlésszöge</td></tr>
+      <tr><td>b</td><td>lamella szélessége</td><td>ℓ</td><td>talpív hossza = b/cosα</td></tr>
+      <tr><td>u</td><td>pórusvíznyomás a talpon</td><td>c', φ'</td><td>hatékony szilárdsági param.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="fellenius" class="reveal">
+  <div class="eyebrow">3 · Az egyszerű, konzervatív</div>
+  <h2>Fellenius-módszer (rendes / svéd lamellás)</h2>
+  <p class="lead">Az alapfeltevés a lehető legegyszerűbb: a <strong>lamellaközi erőket teljesen elhanyagolja</strong>. Így a talpra ható normálerő egyszerűen a súly talpra merőleges komponense, és F <strong>zárt alakban, iteráció nélkül</strong> számítható.</p>
+  <div class="formula">F = Σ [ c'·ℓ + (W·cosα − u·ℓ)·tanφ' ] / Σ [ W·sinα ]
+    <small>Számláló: az ellenálló nyírószilárdság összege a csúszólap mentén. Nevező: a hajtó (csúsztató) komponensek összege. A belépési oldalon (α &lt; 0) a tagok ellenállóan viselkednek.</small>
+  </div>
+  <div class="cards">
+    <div class="card"><h4>Előny</h4><p>Egyszerű, kézzel végigszámolható, nem kell iterálni. Kiváló oktatási és gyors becslő eszköz.</p></div>
+    <div class="card"><h4>Hátrány</h4><p>A lamellaközi erők elhanyagolása miatt <strong>konzervatív</strong> — alulbecsüli F-et, mély csúszólapnál és nagy u-nál akár 10–20%-kal.</p></div>
+  </div>
+</section>
+
+<section id="bishop" class="reveal">
+  <div class="eyebrow">4 · A pontosabb, iteratív</div>
+  <h2>Bishop-féle egyszerűsített módszer</h2>
+  <p class="lead">Bishop finomítása: a lamellák oldalán a <strong>nyíró (függőleges) interlamelláris erőket</strong> hanyagolja el, a vízszinteseket viszont figyelembe veszi. Ehhez minden lamella <strong>függőleges erőegyensúlyát</strong> is felhasználja a teljes nyomatéki egyensúly mellett.</p>
+  <div class="formula">F = (1 / Σ W·sinα) · Σ { [ c'·b + (W − u·b)·tanφ' ] / m<sub>α</sub> }<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;m<sub>α</sub> = cosα + (sinα·tanφ') / F
+    <small>Mivel F az egyenlet mindkét oldalán szerepel, a megoldás <strong>iteratív</strong>: induló F-nek a Fellenius-értéket vesszük, és 3–4 lépésben konvergál.</small>
+  </div>
+  <div class="note"><strong>Miért pontosabb?</strong> Csak az egyes lamellák függőleges egyensúlyát veszi figyelembe, és a vízszintes lamellaközi komponensek elhagyása nem visz be jelentős hibát. A teljesebb (Janbu, Morgenstern–Price) módszerekhez képest a Bishop hibája körhengeres felületen jellemzően csak 1–2%. Ezért a gyakorlati körhengeres rézsűvizsgálat egyik standard eljárása.</div>
+  <p><strong>A két módszer összevetve:</strong> a Bishop rendre <strong>magasabb</strong> F-et ad, mint a Fellenius (jellemzően 5–7%-kal), és a kritikus körük sem pontosan ugyanott van. Az eltérés nő a kritikus kör középponti szögével — épp ezt fogod látni a szimulátorban, ha a két értéket egymás mellett figyeled.</p>
+</section>
+<section id="tipusok" class="reveal">
+  <div class="eyebrow">5 · Hová fut ki a csúszólap?</div>
+  <h2>A három kifutási típus</h2>
+  <p class="lead">A körhengeres csúszólap kilépési pontja szerint három esetet különböztetünk meg. Hogy melyik lesz a <strong>kritikus</strong> (legkisebb F-ű), azt elsősorban a rézsűszög (β), a φ' és egy esetleges kemény réteg mélysége dönti el.</p>
+  <div class="svg-wrap" style="max-width:640px;margin:1.2rem auto">
+    <svg viewBox="0 0 640 400" role="img" aria-label="A három csúszólap-kifutási típus">
+      <polygon points="40,120 280,120 410,290 600,290 600,360 40,360" fill="#e3d9c6" stroke="#b9a888" stroke-width="1"/>
+      <line x1="40" y1="360" x2="600" y2="360" stroke="#8c8c8c" stroke-width="1" stroke-dasharray="6 5"/>
+      <text x="44" y="377" font-family="Inter" font-size="11.5" fill="#64807d">kemény réteg</text>
+      <path d="M 110 120 Q 310 500 500 290" fill="none" stroke="#2f59c4" stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M 150 120 Q 290 398 410 290" fill="none" stroke="#c2521f" stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M 188 120 Q 285 322 358 226" fill="none" stroke="#b87514" stroke-width="2.5" stroke-linecap="round"/>
+      <circle cx="410" cy="290" r="4.5" fill="#c2521f" stroke="#fff" stroke-width="1.5"/>
+      <circle cx="358" cy="226" r="4.5" fill="#b87514" stroke="#fff" stroke-width="1.5"/>
+      <circle cx="500" cy="290" r="4.5" fill="#2f59c4" stroke="#fff" stroke-width="1.5"/>
+      <text x="410" y="307" text-anchor="middle" font-family="Inter" font-size="11.5" fill="#34514f">rézsűláb</text>
+      <circle cx="452" cy="62" r="5" fill="#c2521f"/><text x="466" y="66" font-family="Archivo" font-weight="700" font-size="14" fill="#0d272b">rézsűláb-kör (toe)</text>
+      <text x="466" y="83" font-family="Inter" font-size="12" fill="#64807d">kilép a lábnál</text>
+      <circle cx="452" cy="112" r="5" fill="#b87514"/><text x="466" y="116" font-family="Archivo" font-weight="700" font-size="14" fill="#0d272b">rézsűkör (slope)</text>
+      <text x="466" y="133" font-family="Inter" font-size="12" fill="#64807d">a felületen, láb felett</text>
+      <circle cx="452" cy="162" r="5" fill="#2f59c4"/><text x="466" y="166" font-family="Archivo" font-weight="700" font-size="14" fill="#0d272b">talpkör (base)</text>
+      <text x="466" y="183" font-family="Inter" font-size="12" fill="#64807d">láb alatt, mély csúszás</text>
+    </svg>
+  </div>
+  <div class="cards">
+    <div class="card"><h4><span class="dot toe"></span>Rézsűláb-kör (toe)</h4><p>A leggyakoribb. Meredek rézsűnél (β &gt; 53–60°) és nagyobb φ'-nél szinte mindig ez a kritikus.</p></div>
+    <div class="card"><h4><span class="dot slope"></span>Rézsűkör (slope)</h4><p>Sekély, a felületen kilépő tömeg. Akkor jellemző, ha a láb alatt erősebb réteg van, vagy a felső réteg gyengébb.</p></div>
+    <div class="card"><h4><span class="dot base"></span>Talpkör (base)</h4><p>Mély csúszás vastag, gyenge altalajban (jellemzően φ ≈ 0 telített agyag). A kemény réteg az ívet alulról lekorlátozza.</p></div>
+  </div>
+  <div class="note"><strong>Ezért keresünk sok kört:</strong> a kritikus csúszólapot nem lehet előre kitalálni. A program (vagy a kézi számítás) sok próbakört végigfuttat — eltérő középponttal és sugárral —, és a <strong>legkisebb biztonsági tényezőjűt</strong> választja. Pont ezt teszi lent a "Kritikus kör keresése" gomb.</div>
+</section>
+
+<section id="szimulator" class="reveal">
+  <div class="eyebrow">6 · A fő attrakció</div>
+  <h2>Interaktív rézsűállékonyság-szimulátor</h2>
+  <p class="lead">Húzd a kör <strong>középpontját</strong> (a fehér O fogantyú) az ábrán, vagy állítsd a csúszkákkal. A csúszólap rárajzolódik a rézsűre, lamellákra bomlik, és a Fellenius- meg a Bishop-féle F <strong>élőben</strong> frissül. A státuszsávban látod a kifutási típust is.</p>
   <div class="panel">
-    <h3>Mi az a rézsűállékonyság?</h3>
-    <p>Egy&nbsp;rézsű akkor <b>stabil</b>, ha&nbsp;a&nbsp;talaj <b>nyírószilárdsága</b> a&nbsp;feltételezett csúszólap mentén nagyobb, mint az&nbsp;a&nbsp;nyírófeszültség, amit a&nbsp;saját súlya kelt. Ezt a&nbsp;<b>biztonsági tényező</b> (F) fejezi ki:</p>
-    <div class="callout formula">F = <span style="color:#5C7A52">megtartó (nyírószilárdság)</span> / <span style="color:#C0512A">megcsúsztató (a&nbsp;súly lejtőirányú része)</span></div>
-    <div class="grid2">
-      <div class="callout success" style="margin:6px 0"><b>F ≥ 1,5</b> — biztonságos (szokásos tartós tervezési követelmény).</div>
-      <div class="callout" style="margin:6px 0;background:linear-gradient(180deg,#FBF6E6,#F6EECF);border-left-color:var(--gold)"><b style="color:#9A6A12">1,0 ≤ F &lt; 1,5</b> — határeset, nincs tartalék.</div>
-    </div>
-    <div class="callout note"><b>A nyírószilárdság az&nbsp;alapadat.</b> A&nbsp;Mohr–Coulomb-törvény szerint <span class="nowrap">τ<sub>f</sub> = c′ + σ′·tanφ′</span> — a&nbsp;<b>kohézió</b> (c′) és&nbsp;a&nbsp;<b>belső súrlódási szög</b> (φ′) a&nbsp;talaj alapvető jellemzői. A&nbsp;pórusvíznyomás (u) csökkenti az&nbsp;effektív feszültséget (σ′ = σ − u), így&nbsp;a&nbsp;súrlódási ellenállást is.</p></div>
-    <p>Lépj a&nbsp;<b>Szimulátor</b> fülre: húzd a&nbsp;kör középpontját, állítsd a&nbsp;paramétereket, keresd meg a&nbsp;kritikus kört, és&nbsp;figyeld a&nbsp;két módszer F-jét élőben.</p>
-  </div>
-</div>
-
-<!-- ===== A MÓDSZER ===== -->
-<div class="chapter-page" id="page-modszer">
-  <h2>1. A lamellás módszer — Fellenius és Bishop</h2>
-  <div class="panel">
-    <p>A&nbsp;körhengeres csúszólap fölötti talajtömeget függőleges <b>lamellákra</b> bontjuk. Minden lamellára felírjuk az&nbsp;erőket (W&nbsp;súly, N&nbsp;normál-, T&nbsp;nyíróerő a&nbsp;talpon, u&nbsp;pórusnyomás, lamellaközi erők). A&nbsp;feladat statikailag <b>határozatlan</b>, ezért a&nbsp;módszerek a&nbsp;lamellaközi erőkre tett feltevésben térnek el.</p>
-    <h3>Fellenius (közönséges / svéd) — 1936</h3>
-    <p>A&nbsp;lamellaközi erőket <b>teljesen elhanyagolja</b>. Zárt alakú, iteráció nélkül számítható:</p>
-    <div class="callout formula">F = Σ[ c′·ℓ + (W·cosα − u·ℓ)·tanφ′ ] / Σ[ W·sinα ]&nbsp;&nbsp;(ℓ = b/cosα)</div>
-    <h3>Bishop egyszerűsített — 1955</h3>
-    <p>Csak a&nbsp;<b>függőleges nyíró</b> lamellaközi erőket hanyagolja el (a&nbsp;vízszinteseket figyelembe veszi), ezért pontosabb. <b>Iteratív</b>, mert F a&nbsp;jobb oldalon is szerepel:</p>
-    <div class="callout formula">F = Σ[ (c′·b + (W − u·b)·tanφ′) / m<sub>α</sub> ] / Σ[ W·sinα ]&nbsp;&nbsp;,&nbsp;&nbsp; m<sub>α</sub> = cosα + sinα·tanφ′ / F</div>
-    <div class="grid2">
-      <div class="callout note" style="margin:8px 0"><b>Fellenius:</b> egyszerű, kézzel is számolható, de&nbsp;<b>konzervatív</b> (alábecsli F-et, mély csúszólapnál akár 10–20%).</div>
-      <div class="callout success" style="margin:8px 0"><b>Bishop:</b> pontosabb, rendre <b>néhány %-kal nagyobb</b> F-et ad; ez a&nbsp;gyakorlati standard (SLOPE/W, GEO5).</div>
-    </div>
-    <div class="callout"><b>Érdekesség.</b> φ′ = 0 (telített agyag, rövid távú állapot) esetén a&nbsp;két módszer matematikailag <b>egybeesik</b> — próbáld ki a&nbsp;Szimulátorban a&nbsp;„Kohéziós agyag" forgatókönyvvel!</div>
-  </div>
-</div>
-
-<!-- ===== SZIMULÁTOR ===== -->
-<div class="chapter-page" id="page-sim">
-  <h2>2. Szimulátor</h2>
-  <div class="legend" style="margin-bottom:10px">
-    <span><i style="background:#c98f3e"></i>csúszó tömeg</span>
-    <span><i class="line" style="background:var(--slip)"></i>csúszólap</span>
-    <span><i style="background:var(--azure)"></i>kör középpont (húzható)</span>
-    <span><i class="line" style="background:var(--water)"></i>pórusvíznyomás</span>
-  </div>
-  <div class="simgrid">
-    <div class="stage">
-      <canvas id="cv"></canvas>
-      <div class="verdict" id="verdict"></div>
-      <div class="invalid" id="invalid">A&nbsp;felvett kör nem&nbsp;ad valós csúszólapot. Told a&nbsp;középpontot feljebb és&nbsp;a&nbsp;rézsű fölé.</div>
-    </div>
-    <div class="cpanel">
-      <div class="grp">
-        <h4>Geometria</h4>
-        <div class="ctrl"><div class="row"><label>Rézsűmagasság · H</label><span class="v" id="vH"></span></div><input type="range" id="H" min="4" max="16" step="0.5"></div>
-        <div class="ctrl"><div class="row"><label>Rézsűhajlás · β</label><span class="v" id="vbeta"></span></div><input type="range" id="beta" min="15" max="55" step="1"></div>
-      </div>
-      <div class="grp">
-        <h4>Nyírószilárdsági paraméterek <span class="alap">alapadat</span></h4>
-        <div class="ctrl"><div class="row"><label>Kohézió · c′</label><span class="v" id="vc"></span></div><input type="range" id="c" min="0" max="40" step="1"></div>
-        <div class="ctrl"><div class="row"><label>Belső súrlódási szög · φ′</label><span class="v" id="vphi"></span></div><input type="range" id="phi" min="0" max="40" step="1"></div>
-        <div class="ctrl"><div class="row"><label>Térfogatsúly · γ</label><span class="v" id="vgamma"></span></div><input type="range" id="gamma" min="15" max="22" step="0.5"></div>
-      </div>
-      <div class="grp">
-        <h4>Pórusvíznyomás</h4>
-        <div class="ctrl"><div class="row"><label>r<sub>u</sub> = u / (γ·h)</label><span class="v" id="vru"></span></div><input class="water" type="range" id="ru" min="0" max="0.6" step="0.02"></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="simrow">
-    <div class="cpanel">
-      <div class="grp">
-        <h4>Csúszólap (kör)</h4>
-        <div class="ctrl"><div class="row"><label>Középpont · X</label><span class="v" id="vcx"></span></div><input type="range" id="cx" min="-8" max="14" step="0.25"></div>
-        <div class="ctrl"><div class="row"><label>Középpont · Y</label><span class="v" id="vcy"></span></div><input type="range" id="cy" min="6" max="34" step="0.25"></div>
-        <div class="ctrl"><div class="row"><label>Sugár · R</label><span class="v" id="vR"></span></div><input type="range" id="R" min="8" max="40" step="0.25"></div>
-        <div class="ctrl"><div class="row"><label>Lamellák · n</label><span class="v" id="vn"></span></div><input type="range" id="n" min="6" max="60" step="1"></div>
-      </div>
-    </div>
-    <div class="cpanel">
-      <div class="grp">
-        <h4>Módszer &amp; megjelenítés</h4>
-        <div class="seg" id="methodSeg" role="group">
-          <button data-m="both" aria-pressed="true">Mindkettő</button>
-          <button data-m="fellenius" aria-pressed="false">Fellenius</button>
-          <button data-m="bishop" aria-pressed="false">Bishop</button>
+    <div class="sim">
+      <div>
+        <div class="svg-wrap"><svg id="simSvg" viewBox="0 0 560 380" role="img" aria-label="Rézsűállékonysági szimulátor"></svg></div>
+        <div class="btn-row">
+          <button class="btn" id="findCrit">⌖ Kritikus kör keresése (Bishop)</button>
+          <button class="btn ghost" id="resetSim">↺ Alaphelyzet</button>
         </div>
-        <label class="chk"><input type="checkbox" id="showForces">Erők és&nbsp;lamellaszámok</label>
       </div>
-      <div class="grp">
-        <h4>Művelet</h4>
-        <div class="btnrow"><button class="btn primary" id="findCrit">⌖ Kritikus kör keresése</button></div>
-      </div>
-    </div>
-    <div class="card">
-      <h3>A számítás képletei (élő)</h3>
-      <div class="eq" id="eqFell">
-        <div><b>Fellenius</b></div>
-        FS = Σ[ c′·ℓ + (W·cosα − u·ℓ)·tanφ′ ] / Σ[ W·sinα ]<br>
-        FS = <span class="hl" id="fellNum">–</span> / <span class="hl" id="fellDen">–</span> = <span class="hl" id="fellFS">–</span>
-      </div>
-      <div class="eq" id="eqBish" style="margin-top:8px">
-        <div><b>Bishop</b> (iteratív) · m<sub>α</sub> = cosα + sinα·tanφ′/FS</div>
-        FS = Σ[ (c′·b + (W − u·b)·tanφ′) / m<sub>α</sub> ] / Σ[ W·sinα ]<br>
-        FS = <span class="hl" id="bishFS">–</span>&nbsp;(<span id="bishIter">–</span> iter.)
+      <div>
+        <div class="statusbar" id="statusBar"></div>
+        <div class="result-grid">
+          <div class="res fell"><div class="res-lab">Fellenius</div><div class="res-val" id="fFell">—</div><div class="res-sub">rendes lamellás</div></div>
+          <div class="res bish"><div class="res-lab">Bishop</div><div class="res-val" id="fBish">—</div><div class="res-sub">egyszerűsített, iteratív</div></div>
+        </div>
+        <div class="ctrl">
+          <label>Kör középpont X <span class="val" id="xcV"></span></label>
+          <input type="range" id="xc" min="-30" max="15" step="0.5">
+        </div>
+        <div class="ctrl">
+          <label>Kör középpont Y <span class="val" id="ycV"></span></label>
+          <input type="range" id="yc" min="2" max="50" step="0.5">
+        </div>
+        <div class="ctrl">
+          <label>Sugár R <span class="val" id="rV"></span></label>
+          <input type="range" id="rr" min="5" max="60" step="0.5">
+        </div>
+        <hr style="border:none;border-top:1px solid var(--line);margin:.8rem 0">
+        <div class="ctrl-grid">
+          <div class="ctrl"><label>c' [kPa] <span class="val" id="cV"></span></label><input type="range" id="cc" min="0" max="40" step="1"></div>
+          <div class="ctrl"><label>φ' [°] <span class="val" id="phiV"></span></label><input type="range" id="phi" min="0" max="40" step="1"></div>
+          <div class="ctrl"><label>γ [kN/m³] <span class="val" id="gV"></span></label><input type="range" id="gam" min="15" max="22" step="0.5"></div>
+          <div class="ctrl"><label>Talajvíz y<sub>w</sub> [m] <span class="val" id="wV"></span></label><input type="range" id="yw" min="0" max="20" step="0.5"></div>
+          <div class="ctrl"><label>Magasság H [m] <span class="val" id="hV"></span></label><input type="range" id="hh" min="4" max="20" step="0.5"></div>
+          <div class="ctrl"><label>Rézsűszög β [°] <span class="val" id="bV"></span></label><input type="range" id="beta" min="15" max="70" step="1"></div>
+        </div>
+        <div class="ctrl"><label>Lamellaszám n <span class="val" id="nV"></span></label><input type="range" id="ns" min="6" max="30" step="1"></div>
       </div>
     </div>
   </div>
+  <div class="note warn"><strong>Próbáld ki:</strong> állítsd be ugyanazt a kört, és emeld a talajvízszintet — látod, ahogy mindkét F csökken (a pórusnyomás csökkenti a súrlódást). Aztán nyomd meg a kritikuskör-keresőt, és figyeld, melyik kifutási típushoz tartozik a legkisebb F. A Bishop mindig kicsivel a Fellenius fölött lesz.</div>
+</section>
 
-  <div class="below" style="grid-template-columns:1fr">
-    <div class="card">
-      <h3>Lamellánkénti adatok</h3>
-      <div class="tablewrap"><table class="stable" id="sliceTable"><thead><tr><th>#</th><th>x [m]</th><th>h [m]</th><th>α [°]</th><th>W [kN]</th><th>u [kPa]</th></tr></thead><tbody></tbody></table></div>
-      <p class="eqnote">W a&nbsp;lamella súlya egységnyi rézsűhosszra (kN/m). α a&nbsp;talp hajlása; a&nbsp;pozitív α a&nbsp;lecsúszás irányába mutat. A&nbsp;Fellenius elhanyagolja a&nbsp;lamellaközi erőket (konzervatívabb); φ′ = 0-nál a&nbsp;két módszer egybeesik.</p>
+<section id="kviz" class="reveal">
+  <div class="eyebrow">7 · Tudáspróba</div>
+  <h2>Kvíz — 15 kérdés</h2>
+  <p class="lead">Kevert sorrend, minden válasz után rövid magyarázattal.</p>
+  <div class="quiz-box">
+    <div id="quizMain">
+      <div class="progress-track"><div class="progress-fill" id="qProg"></div></div>
+      <div class="quiz-progress"><span id="qCount">1 / 15</span><span id="qScoreLive">Pont: 0</span></div>
+      <div class="quiz-q" id="qText"></div>
+      <div class="quiz-opts" id="qOpts"></div>
+      <div class="quiz-expl" id="qExpl"></div>
+      <button class="btn quiz-next" id="qNext">Következő →</button>
+    </div>
+    <div class="quiz-result" id="quizResult">
+      <div class="quiz-score" id="qFinal">0 / 15</div>
+      <div class="quiz-msg" id="qMsg"></div>
+      <button class="btn" id="qRestart">↺ Újrakezdés</button>
     </div>
   </div>
-</div>
-
-<!-- ===== KVÍZ ===== -->
-<div class="chapter-page" id="page-kviz">
-  <h2>4. Ellenőrizd magad</h2>
-  <div id="quizHost"></div>
-</div>
-
-<div class="foot">
-  Rézsűállékonyság-szimulátor · <b>BME Építőmérnöki Kar</b> · Geotechnika · oktatási segédanyag — a&nbsp;Fellenius- és&nbsp;Bishop-féle lamellás módszer szemléltetésére (körhengeres csúszólap, határegyensúly). Valós tervezés: EC7 részleges tényezős eljárás.
-</div>
+</section>
 
 </main>
-
+<footer>
+  Rézsűállékonyság — Fellenius & Bishop · interaktív tananyag · Talajmechanika · Készült oktatási célra. A szimulátor szemléltető jellegű (egyréteges, körhengeres, egyszerűsített pórusnyomás-modell); tervezésre az MSZ EN 1997 (EC7) szerinti eljárás irányadó.
+</footer>
 <script>
+(function(){
 "use strict";
 const $=id=>document.getElementById(id);
 
-/* ====== fülek ====== */
-document.querySelectorAll('#chTabs button').forEach(b=>{
-  b.addEventListener('click',()=>{
-    document.querySelectorAll('#chTabs button').forEach(x=>x.classList.remove('active'));
-    document.querySelectorAll('.chapter-page').forEach(x=>x.classList.remove('active'));
-    b.classList.add('active'); $(b.dataset.target).classList.add('active');
-    window.scrollTo({top:0,behavior:'smooth'});
-    if(b.dataset.target==='page-sim') requestAnimationFrame(update);
-  });
-});
+/* ───────────────── ÁLLAPOT ───────────────── */
+const S={xc:-3,yc:17,R:18,c:10,phi:20,gam:18,yw:0,H:10,beta:30,n:16};
+const DEF=Object.assign({},S);
 
-const cv=$('cv'), ctx=cv.getContext('2d');
-const P={H:8,beta:30,gamma:19,c:10,phi:20,ru:0,cx:3,cy:20,R:20,n:30};
-let method='both', showForces=false;
-const DEG=Math.PI/180;
-
-/* ====== geometria: láb az origóban (0,0), rézsű jobbra emelkedik, plató y=H ====== */
-function Bspan(){return P.H/Math.tan(P.beta*DEG);}
-function ground(x){const B=Bspan(); return x<=0?0:(x>=B?P.H:x*Math.tan(P.beta*DEG));}
-function circBot(x){const d=P.R*P.R-(x-P.cx)*(x-P.cx); return d<0?null:P.cy-Math.sqrt(d);}
-
-/* ====== elemzés (Fellenius + Bishop, pórusvíznyomással) ====== */
-function analyze(par){
-  const {H,beta,gamma,c,phi,ru,cx,cy,R,n}=par;
-  const B=H/Math.tan(beta*DEG), tanphi=Math.tan(phi*DEG);
-  const grd=x=> x<=0?0:(x>=B?H:x*Math.tan(beta*DEG));
-  const cb=x=>{const d=R*R-(x-cx)*(x-cx); return d<0?null:cy-Math.sqrt(d);};
-  const step=Math.max(B,1)/1500; const cross=[]; let prev=null;
-  for(let x=-B-2;x<=2*B+2;x+=step){const c0=cb(x); if(c0===null){prev=null;continue;}
-    const diff=c0-grd(x); if(prev!==null && (prev<0)!==(diff<0)) cross.push(x-step/2); prev=diff;}
-  if(cross.length<2) return {valid:false};
-  let xL=cross[0], xR=cross[cross.length-1];
-  for(let i=0;i<cross.length-1;i++) if(cross[i]<=B/2 && cross[i+1]>=B/2){xL=cross[i];xR=cross[i+1];break;}
-  if(xR-xL<0.5) return {valid:false};
-  const w=(xR-xL)/n, slices=[];
-  for(let i=0;i<n;i++){const xm=xL+(i+0.5)*w, top=grd(xm), bot=cb(xm); if(bot===null)continue;
-    const h=top-bot; if(h<=1e-6)continue;
-    const sina=Math.max(-1,Math.min(1,(xm-cx)/R)), alpha=Math.asin(sina), cosa=Math.cos(alpha);
-    slices.push({i,xm,h,alpha,cosa,l:w/cosa,W:gamma*w*h,u:ru*gamma*h});}
-  if(slices.length<3) return {valid:false};
-  let fnum=0,den=0;
-  for(const s of slices){fnum+=c*s.l+(s.W*s.cosa-s.u*s.l)*tanphi; den+=s.W*Math.sin(s.alpha);}
-  if(den<=0) return {valid:false};
-  const FSf=fnum/den;
-  let FSb=FSf>0?FSf:1, iter=0;
-  for(;iter<80;iter++){let nu=0;
-    for(const s of slices){let m=s.cosa+Math.sin(s.alpha)*tanphi/FSb; if(Math.abs(m)<0.15)m=m<0?-0.15:0.15;
-      nu+=(c*w+(s.W-s.u*w)*tanphi)/m;}
-    const FSn=nu/den; if(Math.abs(FSn-FSb)<1e-5){FSb=FSn;iter++;break;} FSb=FSn;}
-  return {valid:true,xL,xR,w,slices,FSf,FSb,fnum,den,iter,B};
+/* ───────────────── GEOMETRIA ─────────────────
+   Fizikai rendszer: x jobbra, y FELFELÉ. A rézsű lába az origóban (0,0).
+   - alsó terep:  x ≥ 0,  y = 0
+   - rézsű:       x_crest ≤ x ≤ 0,  y = −x·tanβ   (x_crest = −H/tanβ)
+   - korona:      x ≤ x_crest,  y = H
+*/
+function xCrest(){return -S.H/Math.tan(S.beta*Math.PI/180);}
+function ySurf(x){
+  const xc=xCrest();
+  if(x<=xc)return S.H;
+  if(x<0)return -x*Math.tan(S.beta*Math.PI/180);
+  return 0;
 }
+function yCirc(x){const d=S.R*S.R-(x-S.xc)*(x-S.xc);return d<=0?null:S.yc-Math.sqrt(d);}
 
-/* ====== world <-> screen ====== */
-let T={};
-function setTransform(res){
-  const B=Bspan();
-  let xmin=Math.min(-0.45*B,-2), xmax=Math.max(1.55*B,B+2);
-  let ymin=-0.18*P.H, ymax=Math.max(1.55*P.H,P.cy+2);
-  // a terepmodell mindig túlérjen a csúszólapon (margóval), hogy az ív sehol ne fusson le a terepről
-  if(res&&res.valid){
-    const m=Math.max(1.5,0.12*Math.max(B,1));
-    xmin=Math.min(xmin,res.xL-m); xmax=Math.max(xmax,res.xR+m);
-    let arcLow=(P.cx>=res.xL&&P.cx<=res.xR)?(P.cy-P.R):Math.min(circBot(res.xL),circBot(res.xR));
-    if(isFinite(arcLow)) ymin=Math.min(ymin,arcLow-1);
+/* a kör és a terep metszéspontjai (belépés=bal, kilépés=jobb) */
+function intersections(){
+  const xL=S.xc-S.R, xR=S.xc+S.R;
+  const N=600, step=(xR-xL)/N;
+  let roots=[];
+  let prev=null,prevX=null;
+  for(let i=0;i<=N;i++){
+    const x=xL+i*step, yc=yCirc(x);
+    if(yc===null){prev=null;continue;}
+    const f=yc-ySurf(x); // <0 : kör a terep alatt
+    if(prev!==null && ((prev<0&&f>=0)||(prev>0&&f<=0))){
+      // bisekció a gyökre
+      let a=prevX,b=x,fa=prev;
+      for(let k=0;k<40;k++){const m=(a+b)/2,fm=yCirc(m)-ySurf(m);if((fa<0)===(fm<0)){a=m;fa=fm;}else{b=m;}}
+      roots.push((a+b)/2);
+    }
+    prev=f;prevX=x;
   }
-  const W=cv.clientWidth||760, Hpx=Math.round(W*0.60);
-  cv.style.height=Hpx+'px';
-  const dpr=Math.min(window.devicePixelRatio||1,2);
-  cv.width=W*dpr; cv.height=Hpx*dpr; ctx.setTransform(dpr,0,0,dpr,0,0);
-  const pad=26, s=Math.min((W-2*pad)/(xmax-xmin),(Hpx-2*pad)/(ymax-ymin));
-  const ox=pad+((W-2*pad)-s*(xmax-xmin))/2, oy=pad+((Hpx-2*pad)-s*(ymax-ymin))/2;
-  T={s,xmin,xmax,ymin,ymax,ox,oy,W,Hpx};
+  if(roots.length<2)return null;
+  return {entry:Math.min(...roots),exit:Math.max(...roots)};
 }
-const sx=x=>T.ox+(x-T.xmin)*T.s;
-const sy=y=>T.oy+(T.ymax-y)*T.s;
-const inv=(px,py)=>({x:T.xmin+(px-T.ox)/T.s, y:T.ymax-(py-T.oy)/T.s});
-const cssv=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 
-/* ====== rajz ====== */
+/* lamellás számítás → {Ff, Fb, type, valid, slices, exit, entry} */
+function analyse(){
+  const it=intersections();
+  if(!it)return{valid:false,reason:'A kör nem metszi két ponton a terepet.'};
+  const {entry,exit}=it;
+  const width=exit-entry;
+  if(width<0.5)return{valid:false,reason:'Túl kicsi csúszó tömeg.'};
+  const n=S.n, b=width/n;
+  const phiR=S.phi*Math.PI/180, tanphi=Math.tan(phiR);
+  const gw=9.81;
+  let slices=[], sumDriving=0, sumFellNum=0, badN=0;
+  for(let i=0;i<n;i++){
+    const xi=entry+(i+0.5)*b;
+    const yt=ySurf(xi), yb=yCirc(xi);
+    if(yb===null){return{valid:false,reason:'Numerikus hiba.'};}
+    const h=yt-yb;
+    if(h<=0)continue;
+    const sina=(S.xc-xi)/S.R;
+    if(Math.abs(sina)>=0.999)return{valid:false,reason:'A kör túl lapos a szélén (|sinα|≈1).'};
+    const alpha=Math.asin(sina), cosa=Math.cos(alpha);
+    const l=b/cosa;
+    const W=S.gam*b*h;
+    // pórusnyomás: a talp a vízszint (yw, a láb felett) alatt van-e
+    const u=Math.max(0,(S.yw-yb))*gw;
+    const driving=W*sina;
+    sumDriving+=driving;
+    // Fellenius
+    const Nfell=W*cosa-u*l;
+    sumFellNum+=S.c*l+Math.max(0,Nfell)*tanphi;
+    slices.push({xi,yt,yb,h,alpha,b,W,u,l,sina,cosa});
+  }
+  if(slices.length<3||sumDriving<=0)return{valid:false,reason:'Nincs értelmes hajtó nyomaték.'};
+  const Ff=sumFellNum/sumDriving;
+  // Bishop (iteratív)
+  let Fb=Ff>0.2?Ff:1.0;
+  for(let k=0;k<60;k++){
+    let num=0,bad=false;
+    for(const s of slices){
+      const ma=s.cosa+(s.sina*tanphi)/Fb;
+      if(ma<0.15){bad=true;break;}
+      num+=(S.c*s.b+(s.W-s.u*s.b)*tanphi)/ma;
+    }
+    if(bad){Fb=NaN;break;}
+    const Fnew=num/sumDriving;
+    if(Math.abs(Fnew-Fb)<1e-5){Fb=Fnew;break;}
+    Fb=Fnew;
+  }
+  // kifutási típus
+  let type;
+  if(exit<-0.4)type='slope';
+  else if(exit<=0.6)type='toe';
+  else type='base';
+  return{valid:true,Ff,Fb:(isFinite(Fb)?Fb:null),type,entry,exit,slices,sumDriving};
+}
+
+/* ───────────────── VETÍTÉS + RAJZ ───────────────── */
+const SVGW=560, SVGH=380;
+function view(){
+  // egységes skála; az ablakot H-hoz kötjük, hogy a kör is beférjen
+  const ymax=S.H+4, ymin=-(0.95*S.H+4);
+  const hM=ymax-ymin, wM=hM*(SVGW/SVGH);
+  const xcen=xCrest()/2+2;
+  return{ymin,ymax,wM,xmin:xcen-wM/2,s:SVGW/wM};
+}
+function P(x,y,v){return[(x-v.xmin)*v.s, SVGH-(y-v.ymin)*v.s];}
+
 function draw(res){
-  setTransform(res);
-  const W=T.W,Hpx=T.Hpx,B=Bspan();
-  ctx.clearRect(0,0,W,Hpx);
-  ctx.fillStyle='#EEF4F2'; ctx.fillRect(0,0,W,Hpx);
-  const left=T.xmin, right=T.xmax, bot=T.ymin;
-  const grad=ctx.createLinearGradient(0,sy(P.H),0,sy(bot));
-  grad.addColorStop(0,'#D2C2A6'); grad.addColorStop(1,'#9c6a32');
-  ctx.beginPath();
-  ctx.moveTo(sx(left),sy(0)); ctx.lineTo(sx(0),sy(0)); ctx.lineTo(sx(B),sy(P.H));
-  ctx.lineTo(sx(right),sy(P.H)); ctx.lineTo(sx(right),sy(bot)); ctx.lineTo(sx(left),sy(bot));
-  ctx.closePath(); ctx.fillStyle=grad; ctx.fill();
-  ctx.save(); ctx.clip();
-  ctx.strokeStyle='rgba(124,90,56,.10)'; ctx.lineWidth=1;
-  for(let gx=left;gx<right+P.H;gx+=P.H/6){ctx.beginPath();ctx.moveTo(sx(gx),sy(P.H));ctx.lineTo(sx(gx-P.H),sy(bot));ctx.stroke();}
-  ctx.restore();
+  const svg=$("simSvg"), v=view();
+  const xc=xCrest();
+  // terep poligon
+  const farL=v.xmin-2, farR=v.xmin+v.wM+2;
+  const surfPts=[[farL,S.H],[xc,S.H],[0,0],[farR,0]];
+  let poly=surfPts.map(p=>{const q=P(p[0],p[1],v);return q[0].toFixed(1)+','+q[1].toFixed(1);}).join(' ');
+  const botY=v.ymin-2;
+  const blq=P(farL,botY,v),brq=P(farR,botY,v);
+  poly+=' '+brq[0].toFixed(1)+','+brq[1].toFixed(1)+' '+blq[0].toFixed(1)+','+blq[1].toFixed(1);
 
-  if(res && res.valid){
-    ctx.beginPath(); ctx.moveTo(sx(res.xL),sy(ground(res.xL)));
-    const N=80;
-    for(let k=0;k<=N;k++){const x=res.xL+(res.xR-res.xL)*k/N; ctx.lineTo(sx(x),sy(ground(x)));}
-    for(let k=N;k>=0;k--){const x=res.xL+(res.xR-res.xL)*k/N; const c0=circBot(x); if(c0!==null) ctx.lineTo(sx(x),sy(c0));}
-    ctx.closePath(); ctx.fillStyle='rgba(201,143,62,.55)'; ctx.fill();
+  let svgStr='<polygon points="'+poly+'" fill="#e3d9c6" stroke="#b9a888" stroke-width="1"/>';
 
-    if(P.ru>0){
-      for(const s of res.slices){const c0=circBot(s.xm); if(c0===null)continue;
-        const t=Math.min(s.u/40,1);
-        ctx.fillStyle='rgba(46,125,138,'+(0.10+0.30*t)+')';
-        ctx.fillRect(sx(s.xm-res.w/2),sy(c0),res.w*T.s,Math.min(s.u/3,12));}
-    }
-    ctx.strokeStyle='rgba(60,40,15,.32)'; ctx.lineWidth=0.7;
-    for(let i=0;i<=res.slices.length;i++){const x=res.xL+i*res.w,top=ground(x),bot=circBot(x);
-      if(bot===null)continue; ctx.beginPath();ctx.moveTo(sx(x),sy(top));ctx.lineTo(sx(x),sy(bot));ctx.stroke();}
-
-    if(showForces){
-      ctx.strokeStyle='rgba(40,30,20,.55)'; ctx.lineWidth=1.3;
-      for(const s of res.slices){const topm=ground(s.xm),botm=circBot(s.xm); if(botm===null)continue;
-        const midy=(topm+botm)/2, len=Math.min(s.W/(P.gamma*P.H*0.9),1.3);
-        arrow(sx(s.xm),sy(midy),sx(s.xm),sy(midy-len));}
-      ctx.fillStyle='rgba(40,30,20,.9)'; ctx.font="600 9.5px 'JetBrains Mono'"; ctx.textAlign='center';
-      if(res.slices.length<=24) for(const s of res.slices){const b0=circBot(s.xm); if(b0!==null)ctx.fillText(s.i+1,sx(s.xm),sy(b0)+12);}
-    }
-
-    ctx.beginPath();
-    for(let k=0;k<=120;k++){const x=res.xL+(res.xR-res.xL)*k/120; const c0=circBot(x);
-      if(c0===null)continue; k===0?ctx.moveTo(sx(x),sy(c0)):ctx.lineTo(sx(x),sy(c0));}
-    ctx.strokeStyle=cssv('--slip'); ctx.lineWidth=3; ctx.stroke();
-
-    ctx.setLineDash([4,4]); ctx.strokeStyle='rgba(192,81,42,.4)'; ctx.lineWidth=1;
-    ctx.beginPath();ctx.moveTo(sx(P.cx),sy(P.cy));ctx.lineTo(sx(res.xL),sy(circBot(res.xL)));ctx.stroke();
-    ctx.beginPath();ctx.moveTo(sx(P.cx),sy(P.cy));ctx.lineTo(sx(res.xR),sy(circBot(res.xR)));ctx.stroke();
-    ctx.setLineDash([]);
-  } else {
-    ctx.beginPath(); ctx.arc(sx(P.cx),sy(P.cy),P.R*T.s,0,2*Math.PI);
-    ctx.strokeStyle='rgba(192,81,42,.35)'; ctx.lineWidth=1.5; ctx.setLineDash([5,5]); ctx.stroke(); ctx.setLineDash([]);
+  // talajvízszint
+  if(S.yw>0.05){
+    const wl=P(farL,S.yw,v), wr=P(0,S.yw,v);
+    svgStr+='<line x1="'+wl[0].toFixed(1)+'" y1="'+wl[1].toFixed(1)+'" x2="'+wr[0].toFixed(1)+'" y2="'+wr[1].toFixed(1)+'" stroke="#1b6fae" stroke-width="1.4" stroke-dasharray="5 4"/>';
+    svgStr+='<text x="'+(wl[0]+4).toFixed(1)+'" y="'+(wl[1]-5).toFixed(1)+'" font-family="JetBrains Mono" font-size="10" fill="#1b6fae">talajvíz</text>';
+    svgStr+='<path d="M'+(wl[0]+30)+' '+(wl[1]-2)+' l4 0 l-2 -4 z" fill="#1b6fae"/>';
   }
 
-  ctx.beginPath(); ctx.moveTo(sx(left),sy(0)); ctx.lineTo(sx(0),sy(0));
-  ctx.lineTo(sx(B),sy(P.H)); ctx.lineTo(sx(right),sy(P.H));
-  ctx.strokeStyle='#5a3d1a'; ctx.lineWidth=2; ctx.stroke();
+  if(res.valid){
+    const col = res.type==='toe'?'#c2521f':res.type==='slope'?'#b87514':'#2f59c4';
+    // teljes kör halványan
+    const cc=P(S.xc,S.yc,v);
+    svgStr+='<circle cx="'+cc[0].toFixed(1)+'" cy="'+cc[1].toFixed(1)+'" r="'+(S.R*v.s).toFixed(1)+'" fill="none" stroke="'+col+'" stroke-width="0.8" stroke-dasharray="3 4" opacity="0.4"/>';
+    // lamellák
+    let lam='';
+    for(const s of res.slices){
+      const t1=P(s.xi-s.b/2,s.yt<ySurf(s.xi-s.b/2)?s.yt:ySurf(s.xi-s.b/2),v);
+      const tA=P(s.xi-s.b/2,ySurf(s.xi-s.b/2),v);
+      const bA=P(s.xi-s.b/2,yCirc(s.xi-s.b/2)??s.yb,v);
+      const tB=P(s.xi+s.b/2,ySurf(s.xi+s.b/2),v);
+      const bB=P(s.xi+s.b/2,yCirc(s.xi+s.b/2)??s.yb,v);
+      lam+='<path d="M'+tA[0].toFixed(1)+' '+tA[1].toFixed(1)+' L'+tB[0].toFixed(1)+' '+tB[1].toFixed(1)+' L'+bB[0].toFixed(1)+' '+bB[1].toFixed(1)+' L'+bA[0].toFixed(1)+' '+bA[1].toFixed(1)+' Z" fill="'+col+'" fill-opacity="0.13" stroke="'+col+'" stroke-width="0.4" stroke-opacity="0.5"/>';
+    }
+    svgStr+=lam;
+    // csúszólap-ív (vastag)
+    let arc='M';
+    const NA=80;
+    for(let i=0;i<=NA;i++){
+      const x=res.entry+(res.exit-res.entry)*i/NA;
+      const q=P(x,yCirc(x),v);
+      arc+=(i?' L':'')+q[0].toFixed(1)+' '+q[1].toFixed(1);
+    }
+    svgStr+='<path d="'+arc+'" fill="none" stroke="'+col+'" stroke-width="3" stroke-linecap="round"/>';
+    // belépési/kilépési pont
+    const eP=P(res.entry,yCirc(res.entry),v), xP=P(res.exit,yCirc(res.exit),v);
+    svgStr+='<circle cx="'+xP[0].toFixed(1)+'" cy="'+xP[1].toFixed(1)+'" r="4" fill="'+col+'" stroke="#fff" stroke-width="1.5"/>';
+    // sugár + középpont
+    svgStr+='<line x1="'+cc[0].toFixed(1)+'" y1="'+cc[1].toFixed(1)+'" x2="'+xP[0].toFixed(1)+'" y2="'+xP[1].toFixed(1)+'" stroke="'+col+'" stroke-width="0.8" opacity="0.5"/>';
+  }
+  // középpont fogantyú (mindig)
+  const ch=P(S.xc,S.yc,v);
+  svgStr+='<g id="handle" style="cursor:grab"><circle cx="'+ch[0].toFixed(1)+'" cy="'+ch[1].toFixed(1)+'" r="9" fill="#fff" stroke="#0e7c6b" stroke-width="2"/><text x="'+ch[0].toFixed(1)+'" y="'+(ch[1]+4).toFixed(1)+'" text-anchor="middle" font-family="Archivo" font-weight="800" font-size="11" fill="#0e7c6b">O</text></g>';
 
-  const xHd=Math.min(B+1.0,right-0.4);
-  ctx.strokeStyle='rgba(40,30,20,.4)'; ctx.lineWidth=1; ctx.setLineDash([2,3]);
-  ctx.beginPath();ctx.moveTo(sx(xHd),sy(0));ctx.lineTo(sx(xHd),sy(P.H));ctx.stroke();ctx.setLineDash([]);
-  ctx.fillStyle='rgba(40,30,20,.72)'; ctx.font="500 11px 'JetBrains Mono'"; ctx.textAlign='left';
-  ctx.fillText('H='+P.H.toFixed(1)+' m', sx(xHd)+5, sy(P.H/2));
-
-  const HX=sx(P.cx),HY=sy(P.cy);
-  ctx.beginPath();ctx.arc(HX,HY,8,0,2*Math.PI); ctx.fillStyle=cssv('--accent'); ctx.fill();
-  ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.stroke();
-  ctx.beginPath();ctx.moveTo(HX-4,HY);ctx.lineTo(HX+4,HY);ctx.moveTo(HX,HY-4);ctx.lineTo(HX,HY+4);
-  ctx.strokeStyle='#fff';ctx.lineWidth=1.4;ctx.stroke();
-  ctx.fillStyle=cssv('--accent'); ctx.font="600 10px 'JetBrains Mono'"; ctx.textAlign='left';
-  ctx.fillText('O ('+P.cx.toFixed(1)+', '+P.cy.toFixed(1)+')  R='+P.R.toFixed(1), HX+12, HY-8);
-}
-function arrow(x1,y1,x2,y2){ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
-  const a=Math.atan2(y2-y1,x2-x1),h=4.5;
-  ctx.beginPath();ctx.moveTo(x2,y2);ctx.lineTo(x2-h*Math.cos(a-0.5),y2-h*Math.sin(a-0.5));
-  ctx.moveTo(x2,y2);ctx.lineTo(x2-h*Math.cos(a+0.5),y2-h*Math.sin(a+0.5));ctx.stroke();}
-
-/* ====== verdikt + táblák ====== */
-function fsColor(fs){return fs>=1.5?'var(--safe)':fs>=1.0?'var(--warn)':'var(--danger)';}
-function fsTag(fs){return fs>=1.5?'biztonságos':fs>=1.0?'határeset':'instabil';}
-function update(){
-  const res=analyze(P); draw(res);
-  const vd=$('verdict');
   if(!res.valid){
-    $('invalid').style.display='block'; vd.innerHTML='';
-    ['fellNum','fellDen','fellFS','bishFS','bishIter'].forEach(i=>$(i).textContent='–');
-    $('sliceTable').querySelector('tbody').innerHTML=''; return;
+    svgStr+='<text x="280" y="350" text-anchor="middle" font-family="Inter" font-size="13" fill="#a32626">'+res.reason+'</text>';
   }
-  $('invalid').style.display='none';
-  let cards='';
-  if(method==='both'||method==='fellenius')
-    cards+='<div class="fscard"><div class="lab">Fellenius</div><div class="val" style="color:'+fsColor(res.FSf)+'">'+res.FSf.toFixed(3)+'</div><div class="tag" style="color:'+fsColor(res.FSf)+'">'+fsTag(res.FSf)+'</div></div>';
-  if(method==='both'||method==='bishop')
-    cards+='<div class="fscard"><div class="lab">Bishop</div><div class="val" style="color:'+fsColor(res.FSb)+'">'+res.FSb.toFixed(3)+'</div><div class="tag" style="color:'+fsColor(res.FSb)+'">'+fsTag(res.FSb)+'</div></div>';
-  vd.innerHTML=cards;
-  $('fellNum').textContent=res.fnum.toFixed(1); $('fellDen').textContent=res.den.toFixed(1);
-  $('fellFS').textContent=res.FSf.toFixed(3); $('bishFS').textContent=res.FSb.toFixed(3); $('bishIter').textContent=res.iter;
-  $('eqFell').classList.toggle('dim',method==='bishop'); $('eqBish').classList.toggle('dim',method==='fellenius');
-  $('sliceTable').querySelector('tbody').innerHTML=res.slices.map(s=>'<tr><td>'+(s.i+1)+'</td><td>'+s.xm.toFixed(2)+'</td><td>'+s.h.toFixed(2)+'</td><td>'+(s.alpha/DEG).toFixed(1)+'</td><td>'+s.W.toFixed(1)+'</td><td>'+s.u.toFixed(1)+'</td></tr>').join('');
+  svg.innerHTML=svgStr;
+  attachDrag();
 }
 
-/* ====== csúszkák ====== */
-const fmt={H:v=>v.toFixed(1)+' m',beta:v=>v.toFixed(0)+'°',gamma:v=>v.toFixed(1)+' kN/m³',
-  c:v=>v.toFixed(0)+' kPa',phi:v=>v.toFixed(0)+'°',ru:v=>v.toFixed(2),
-  cx:v=>v.toFixed(2)+' m',cy:v=>v.toFixed(2)+' m',R:v=>v.toFixed(2)+' m',n:v=>v.toFixed(0)};
-const vmap={H:'vH',beta:'vbeta',gamma:'vgamma',c:'vc',phi:'vphi',ru:'vru',cx:'vcx',cy:'vcy',R:'vR',n:'vn'};
-function syncUI(){for(const k in vmap){$(k).value=P[k]; $(vmap[k]).textContent=fmt[k](P[k]);}}
-for(const k in vmap) $(k).addEventListener('input',e=>{P[k]=parseFloat(e.target.value); $(vmap[k]).textContent=fmt[k](P[k]); update();});
+/* ───────────────── UI FRISSÍTÉS ───────────────── */
+function fbadge(F){if(F===null||!isFinite(F))return'';return F>=1.5?'<span class="fbadge safe">stabil</span>':F>=1?'<span class="fbadge safe">F≥1</span>':'<span class="fbadge unsafe">F&lt;1</span>';}
+function update(){
+  // csúszka-értékek
+  $("xcV").textContent=S.xc.toFixed(1)+" m";$("ycV").textContent=S.yc.toFixed(1)+" m";$("rV").textContent=S.R.toFixed(1)+" m";
+  $("cV").textContent=S.c+" kPa";$("phiV").textContent=S.phi+"°";$("gV").textContent=S.gam+" kN/m³";
+  $("wV").textContent=S.yw.toFixed(1)+" m";$("hV").textContent=S.H.toFixed(1)+" m";$("bV").textContent=S.beta+"°";$("nV").textContent=S.n;
+  const res=analyse();
+  draw(res);
+  const sb=$("statusBar");
+  if(res.valid){
+    $("fFell").innerHTML=res.Ff.toFixed(3)+' '+fbadge(res.Ff);
+    if(res.Fb!==null){
+      $("fBish").innerHTML=res.Fb.toFixed(3)+' '+fbadge(res.Fb);
+    }else{
+      $("fBish").innerHTML='<span style="font-size:1.1rem;color:var(--ink3)">nem konvergál</span>';
+    }
+    const tn={toe:'Rézsűláb-kör (toe)',slope:'Rézsűkör (slope)',base:'Talpkör (base)'}[res.type];
+    sb.innerHTML='<div class="chip type-'+res.type+'">Kifutás: <b>'+tn+'</b></div>'+
+      '<div class="chip">Kilépés x = <b>'+res.exit.toFixed(1)+' m</b></div>'+
+      '<div class="chip">Lamellák: <b>'+res.slices.length+'</b></div>';
+  }else{
+    $("fFell").textContent='—';$("fBish").textContent='—';
+    sb.innerHTML='<div class="chip bad">'+res.reason+'</div>';
+  }
+}
 
-$('methodSeg').addEventListener('click',e=>{const b=e.target.closest('button'); if(!b)return;
-  method=b.dataset.m; [...$('methodSeg').children].forEach(x=>x.setAttribute('aria-pressed', x===b)); update();});
-$('showForces').addEventListener('change',e=>{showForces=e.target.checked; update();});
-
-/* ====== kör húzása ====== */
+/* ───────────────── HÚZÁS ───────────────── */
 let dragging=false;
-function pp(e){const r=cv.getBoundingClientRect();return{px:e.clientX-r.left,py:e.clientY-r.top};}
-cv.addEventListener('pointerdown',e=>{const {px,py}=pp(e);
-  if(Math.hypot(px-sx(P.cx),py-sy(P.cy))<18){dragging=true;cv.classList.add('dragging');cv.setPointerCapture(e.pointerId);}});
-cv.addEventListener('pointermove',e=>{if(!dragging)return; const {px,py}=pp(e); const w=inv(px,py);
-  P.cx=Math.max(-8,Math.min(14,w.x)); P.cy=Math.max(6,Math.min(34,w.y));
-  $('cx').value=P.cx;$('cy').value=P.cy;$('vcx').textContent=fmt.cx(P.cx);$('vcy').textContent=fmt.cy(P.cy); update();});
-cv.addEventListener('pointerup',()=>{dragging=false;cv.classList.remove('dragging');});
-cv.addEventListener('pointercancel',()=>{dragging=false;cv.classList.remove('dragging');});
+function attachDrag(){
+  const h=$("handle"); if(!h)return;
+  h.addEventListener('pointerdown',e=>{dragging=true;h.style.cursor='grabbing';e.target.setPointerCapture?.(e.pointerId);e.preventDefault();});
+}
+function svgPoint(e){
+  const svg=$("simSvg"),r=svg.getBoundingClientRect();
+  const x=(e.clientX-r.left)/r.width*SVGW, y=(e.clientY-r.top)/r.height*SVGH;
+  return{x,y};
+}
+window.addEventListener('pointermove',e=>{
+  if(!dragging)return;
+  const v=view(),p=svgPoint(e);
+  const xm=p.x/v.s+v.xmin, ym=v.ymin+(SVGH-p.y)/v.s;
+  S.xc=Math.max(-40,Math.min(20,Math.round(xm*2)/2));
+  S.yc=Math.max(2,Math.min(50,Math.round(ym*2)/2));
+  $("xc").value=S.xc;$("yc").value=S.yc;
+  update();
+});
+window.addEventListener('pointerup',()=>{if(dragging){dragging=false;const h=$("handle");if(h)h.style.cursor='grab';}});
 
-/* ====== kritikus kör keresése (min Bishop FS) ====== */
-$('findCrit').addEventListener('click',()=>{
-  const btn=$('findCrit'),old=btn.textContent; btn.textContent='Keresés…'; btn.disabled=true;
-  setTimeout(()=>{
-    const B=Bspan(); let best=null;
-    function scan(cx0,cx1,cy0,cy1,R0,R1,steps){
-      for(let i=0;i<=steps;i++)for(let j=0;j<=steps;j++)for(let k=0;k<=steps;k++){
-        const cx=cx0+(cx1-cx0)*i/steps, cy=cy0+(cy1-cy0)*j/steps, R=R0+(R1-R0)*k/steps;
-        const r=analyze({...P,cx,cy,R,n:24}); if(!r.valid)continue;
-        if(r.xL<-0.35*B||r.xR<0.8*B)continue;
-        if(!best||r.FSb<best.FSb) best={cx,cy,R,FSb:r.FSb};
-      }}
-    scan(-0.5*B,0.9*B,P.H*1.05,P.H*3,0.9*P.H,3.2*P.H,10);
-    if(best){const d=B*0.12; scan(best.cx-d,best.cx+d,best.cy-d,best.cy+d,best.R-d,best.R+d,8);
-      P.cx=Math.max(-8,Math.min(14,Math.round(best.cx*4)/4));
-      P.cy=Math.max(6,Math.min(34,Math.round(best.cy*4)/4));
-      P.R=Math.max(8,Math.min(40,Math.round(best.R*4)/4));
-      syncUI(); update();}
-    btn.textContent=old; btn.disabled=false;
-  },30);
+/* ───────────────── CSÚSZKÁK ───────────────── */
+const bind=[['xc','xc'],['yc','yc'],['rr','R'],['cc','c'],['phi','phi'],['gam','gam'],['yw','yw'],['hh','H'],['beta','beta'],['ns','n']];
+function syncInputs(){bind.forEach(([id,key])=>{$(id).value=S[key];});}
+bind.forEach(([id,key])=>{
+  $(id).addEventListener('input',()=>{S[key]=parseFloat($(id).value);update();});
 });
 
-/* ====== kvíz ====== */
-const QZ=[
- {q:'Miben tér el a Fellenius és a Bishop módszer?',o:['A csúszólap alakjában (kör vs. egyenes)','A lamellaközi erőkre tett feltevésben','A talaj térfogatsúlyában','Semmiben, azonosak'],a:1,e:'Mindkettő körhengeres csúszólapot és lamellákat használ; a különbség a lamellaközi erőkre tett feltevés (Fellenius mindet elhanyagolja, Bishop csak a függőleges nyírókat).'},
- {q:'Melyik állítás igaz a két módszer F-jére?',o:['A Fellenius mindig nagyobb','A Bishop rendszerint kissé nagyobb (kevésbé konzervatív)','Mindig pontosan egyenlők','A Bishop mindig kétszerese a Fellenius-nak'],a:1,e:'A Fellenius elhanyagolja a lamellaközi erőket, ezért konzervatív (kisebb F). A Bishop néhány %-kal nagyobb, pontosabb értéket ad.'},
- {q:'Mikor esik egybe a két módszer matematikailag?',o:['Ha φ′ = 0','Ha c′ = 0','Ha rᵤ = 0','Soha'],a:0,e:'φ′ = 0 esetén az mα = cosα, és a Bishop-képlet a Fellenius-ba megy át — a két F egybeesik (telített agyag, rövid távú állapot).'},
- {q:'Hogyan hat a pórusvíznyomás (u) a biztonsági tényezőre?',o:['Növeli, mert nehezebb a talaj','Csökkenti, mert kisebb az effektív feszültség és így a súrlódás','Nincs hatása','Csak a kohéziót növeli'],a:1,e:'σ′ = σ − u: a nagyobb u kisebb effektív normálfeszültséget, így kisebb súrlódási ellenállást ad → kisebb F.'},
- {q:'Miért iteratív a Bishop-módszer?',o:['Mert sok lamella van','Mert az F a saját képletének jobb oldalán is szerepel (mα-ban)','Mert a kört is keresni kell','Mert a talajvíz változik'],a:1,e:'Az mα = cosα + sinα·tanφ′/F tag tartalmazza F-et, ezért F-et iterációval kell megkeresni (Fellenius-értékből indulva, 3–4 lépés elég).'}
-];
-const qh=$('quizHost');
-QZ.forEach((it,qi)=>{const d=document.createElement('div');d.className='quiz';
-  let h='<div class="q">'+(qi+1)+'. '+it.q+'</div>';
-  it.o.forEach((op,oi)=>h+='<button class="opt" data-q="'+qi+'" data-o="'+oi+'">'+op+'</button>');
-  h+='<div class="exp" id="exp'+qi+'">'+it.e+'</div>'; d.innerHTML=h; qh.appendChild(d);});
-qh.addEventListener('click',e=>{const b=e.target.closest('.opt'); if(!b)return;
-  const qi=+b.dataset.q,oi=+b.dataset.o,par=b.parentNode; if(par.dataset.done)return; par.dataset.done='1';
-  par.querySelectorAll('.opt').forEach((o,i)=>{o.disabled=true; if(i===QZ[qi].a)o.classList.add('right');});
-  if(oi!==QZ[qi].a)b.classList.add('wrong'); $('exp'+qi).classList.add('show');});
-
-/* ====== init ====== */
-window.addEventListener('resize',()=>update());
-syncUI(); update();
-setTimeout(()=>$('findCrit').click(),60);
-</script>
-
-<script>
-/* Magyar tipográfia — automatikus sortörés-szabályok */
-(function(){
-  "use strict";
-  var NBSP=' ', WJ='⁠';
-  function math(s){ return s.replace(/ (?=[=+−·×<>])/g,NBSP).replace(/([=+−·×<>]) /g,'$1'+NBSP); }
-  function units(s){ return s.replace(/(\d) (?=(?:kPa|MPa|GPa|kN\/m³|kN\/m²|kN|m³|m²|m\/s|cm|mm|km|kg|°C|°|%|m|t|óra|nap|hét|hónap|év)(?:[\s.,;:!?)\]–—]|$))/g,'$1'+NBSP); }
-  function shortWords(s){ return s.replace(/(^|[\s(„"'»–—])(a|az|s|e|é|és|is)(?: )(?=\S)/gi,'$1$2'+NBSP); }
-  function dashes(s){ return s.replace(/([0-9A-Za-zÀ-ÿ])([-–—])([0-9A-Za-zÀ-ÿ])/g,'$1'+WJ+'$2'+WJ+'$3'); }
-  function sentenceStart(s){ return s.replace(/([.!?…][)"'»”’]?\s+\S+) (?=\S)/g,'$1'+NBSP); }
-  function fix(s){ return dashes(units(math(shortWords(sentenceStart(s))))); }
-  var SKIP={SCRIPT:1,STYLE:1,CODE:1,PRE:1,KBD:1,SAMP:1,INPUT:1,TEXTAREA:1,SELECT:1,OPTION:1,NOSCRIPT:1};
-  function walk(el){
-    for(var n=el.firstChild;n;n=n.nextSibling){
-      if(n.nodeType===3){ var t=n.nodeValue; if(t && /\S/.test(t)){ var nt=fix(t); if(nt!==t) n.nodeValue=nt; } }
-      else if(n.nodeType===1){ var tag=n.tagName?n.tagName.toUpperCase():''; if(SKIP[tag]) continue;
-        if(n.namespaceURI==='http://www.w3.org/2000/svg') continue;
-        if(n.classList && n.classList.contains('nowrap')) continue;
-        if(n.isContentEditable) continue; walk(n); }
+/* ───────────────── KRITIKUS KÖR KERESÉSE ───────────────── */
+$("findCrit").addEventListener('click',()=>{
+  const xc0=xCrest();
+  let best=null;
+  // rács a középpont és sugár körül; a kör menjen a rézsű fölé/mögé
+  for(let cx=xc0-S.H*0.6; cx<=S.H*0.4; cx+=S.H*0.12){
+    for(let cy=S.H*0.9; cy<=S.H*2.6; cy+=S.H*0.16){
+      // R: hogy a láb körül messen — a (cx,cy)-tól a lábig és a koronáig terjedő tartomány
+      const Rtoe=Math.hypot(cx-0,cy-0);
+      for(let R=Rtoe*0.85; R<=Rtoe*1.5; R+=S.H*0.18){
+        const save={xc:S.xc,yc:S.yc,R:S.R};
+        S.xc=cx;S.yc=cy;S.R=R;
+        const r=analyse();
+        if(r.valid&&r.Fb!==null&&isFinite(r.Fb)&&r.Fb>0.2){
+          if(!best||r.Fb<best.F){best={xc:cx,yc:cy,R,F:r.Fb};}
+        }
+        S.xc=save.xc;S.yc=save.yc;S.R=save.R;
+      }
     }
   }
-  function run(){ if(document.body) walk(document.body); }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',run); else run();
+  if(best){
+    S.xc=Math.round(best.xc*2)/2;S.yc=Math.round(best.yc*2)/2;S.R=Math.round(best.R*2)/2;
+    syncInputs();update();
+  }
+});
+$("resetSim").addEventListener('click',()=>{Object.assign(S,DEF);syncInputs();update();});
+
+/* init */
+syncInputs();update();
+
+/* ───────────────── NAV + REVEAL ───────────────── */
+(function(){
+  const links=[...document.querySelectorAll('.nav-link')];
+  if(typeof IntersectionObserver==='undefined'){document.querySelectorAll('.reveal').forEach(el=>el.classList.add('in'));return;}
+  const secs=links.map(l=>document.querySelector(l.getAttribute('href'))).filter(Boolean);
+  const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)links.forEach(l=>l.classList.toggle('active',l.getAttribute('href')==='#'+e.target.id));}),{rootMargin:'-30% 0px -60% 0px'});
+  secs.forEach(s=>io.observe(s));
+  const rio=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');rio.unobserve(e.target);}}),{threshold:0.08});
+  document.querySelectorAll('.reveal').forEach(el=>rio.observe(el));
+})();
+
+/* ───────────────── KVÍZ ───────────────── */
+(function(){
+  const Q=[
+    {q:"Mit fejez ki a rézsűállékonysági biztonsági tényező (F)?",o:["A csúszó tömeg súlyát","Az ellenálló és a hajtó nyomatékok arányát","A talaj víztartalmát","A rézsű magasságát"],c:1,e:"F = M_ellenálló / M_hajtó. F < 1 elméleti megcsúszást jelez; a gyakorlatban F ≥ 1,3–1,5 az elvárt."},
+    {q:"Mi a lamellás módszer lényege?",o:["A talajt vízszintes rétegekre osztjuk","A csúszó tömeget függőleges lamellákra osztjuk, és lamellánként írjuk fel az erőket","A rézsűt háromszögekre bontjuk","A víznyomást elhanyagoljuk"],c:1,e:"A csúszó tömeget egyenlő szélességű függőleges lamellákra osztjuk; minden talpszakasz a csúszólap része."},
+    {q:"Miért statikailag határozatlan a lamellás feladat?",o:["Mert a talaj rugalmas","Mert több az ismeretlen, mint az egyenlet","Mert a csúszólap nem kör","Mert nincs víznyomás"],c:1,e:"Kettőnél több lamellára több ismeretlen van, mint egyenlet — ezért kellenek a lamellaközi erőkre vonatkozó egyszerűsítő feltevések."},
+    {q:"Mit feltételez a Fellenius-módszer a lamellaközi erőkről?",o:["Csak a nyíró komponenst hanyagolja el","Teljesen elhanyagolja őket","Pontosan számítja őket","Csak a vízszintes komponenst veszi figyelembe"],c:1,e:"A rendes (Fellenius) módszer minden lamellaközi erőt elhanyagol — ezért egyszerű, de konzervatív."},
+    {q:"Mi a Fellenius-módszer fő előnye?",o:["A legpontosabb módszer","Zárt alakban, iteráció nélkül számítható","Figyelembe veszi a 3D hatásokat","Nem kell talajparaméter hozzá"],c:1,e:"A normálerő közvetlenül adódik a súly merőleges komponenseként, így F iteráció nélkül számolható."},
+    {q:"Mit hanyagol el a Bishop-féle egyszerűsített módszer?",o:["A kohéziót","A lamellák közti nyíró (függőleges) erőket","A talaj súlyát","A csúszólap görbületét"],c:1,e:"Bishop a függőleges interlamelláris (nyíró) erőket hanyagolja el, a vízszinteseket figyelembe veszi."},
+    {q:"Miért iteratív a Bishop-módszer megoldása?",o:["Mert sok lamellát használ","Mert F az mα tagon keresztül a saját képletének mindkét oldalán szerepel","Mert a víznyomás változik","Mert a kör sugara ismeretlen"],c:1,e:"Az mα = cosα + sinα·tanφ'/F tagban F szerepel, ezért F-et iterációval (induló érték: a Fellenius-F) finomítjuk."},
+    {q:"A két módszer közül melyik ad jellemzően magasabb F-et?",o:["A Fellenius","A Bishop","Mindig azonosat adnak","Véletlenszerű"],c:1,e:"A Bishop rendre magasabb (jellemzően 5–7%-kal), mert kevesebb erőt hanyagol el; a Fellenius konzervatívabb."},
+    {q:"A Bishop-módszer hibája a teljesebb (pl. Morgenstern–Price) módszerekhez képest körhengeres felületen jellemzően:",o:["20–30%","csak 1–2%","mindig 0%","nem értelmezhető"],c:1,e:"Körhengeres felületen a Bishop pontossága kiváló — a hiba tipikusan csak 1–2%, ezért gyakorlati standard."},
+    {q:"Hol lép ki a rézsűláb-kör (toe circle)?",o:["A rézsűfelületen, a láb felett","Pontosan a rézsű lábánál","A láb alatt, mélyen","A koronán"],c:1,e:"A toe circle a rézsű lábánál metszi a terepet — meredek rézsűnél és nagyobb φ'-nél ez a leggyakoribb kritikus kör."},
+    {q:"Mikor jellemző a talpkör (base / midpoint circle)?",o:["Meredek, száraz homokrézsűnél","Vastag, gyenge altalaj esetén (pl. telített agyag, φ≈0)","Mindig, ha nincs talajvíz","Csak sziklában"],c:1,e:"Vastag gyenge réteg esetén az ív mélyen, a láb alatt fut; egy közeli kemény réteg alulról lekorlátozza."},
+    {q:"Hogyan hat a megemelkedő talajvízszint a biztonsági tényezőre?",o:["Növeli F-et","Csökkenti F-et, mert a pórusnyomás csökkenti a hatékony feszültséget és a súrlódást","Nincs hatása","Csak a kohéziót növeli"],c:1,e:"A pórusvíznyomás csökkenti a hatékony normálfeszültséget (σ' = σ − u), így a súrlódási ellenállást és F-et is."},
+    {q:"Melyik tényező billentheti instabil felé a rézsűt?",o:["A rézsű lankásítása","A láb alámetszése / a rézsű meredekítése","A talajvízszint süllyesztése","A láb megtámasztása"],c:1,e:"A láb alámetszése vagy a meredekítés növeli a hajtó nyomatékot és csökkenti az ellenállást — kritikus beavatkozás."},
+    {q:"A Mohr–Coulomb nyírószilárdság képlete:",o:["τ = c' + σ'·tanφ'","τ = γ·h","τ = W·sinα","τ = c'·R"],c:1,e:"τ = c' + σ'·tanφ': a nyírószilárdság a kohézióból és a hatékony normálfeszültségtől függő súrlódásból áll."},
+    {q:"Miért kell sok próbakört végigszámolni?",o:["Hogy szebb legyen az ábra","Mert a kritikus (legkisebb F-ű) kör helye előre nem ismert","Mert a Bishop ezt megköveteli","Hogy több lamellánk legyen"],c:1,e:"A kritikus csúszólap helyzete a geometria és a talajparaméterek függvénye; sok kört kipróbálva a legkisebb F-űt keressük."}
+  ];
+  let order=[],idx=0,score=0;
+  function sh(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+  function start(){order=sh([...Q.keys()]);idx=0;score=0;$("quizResult").classList.remove('show');$("quizMain").style.display='block';show();}
+  function show(){
+    const q=Q[order[idx]];
+    $("qCount").textContent=(idx+1)+" / "+Q.length;
+    $("qScoreLive").textContent="Pont: "+score;
+    $("qProg").style.width=(idx/Q.length*100)+"%";
+    $("qText").textContent=q.q;
+    $("qExpl").classList.remove('show');$("qNext").classList.remove('show');
+    const opts=sh(q.o.map((t,i)=>({t,ok:i===q.c})));
+    $("qOpts").innerHTML="";
+    opts.forEach(o=>{
+      const b=document.createElement('button');b.className='quiz-opt';b.textContent=o.t;b.dataset.ok=o.ok?"1":"0";
+      b.addEventListener('click',()=>{
+        [...$("qOpts").children].forEach(x=>x.disabled=true);
+        if(o.ok){b.classList.add('correct');score++;}
+        else{b.classList.add('wrong');[...$("qOpts").children].find(x=>x.dataset.ok==="1").classList.add('correct');}
+        $("qScoreLive").textContent="Pont: "+score;
+        $("qExpl").innerHTML="<b>Magyarázat:</b> "+q.e;$("qExpl").classList.add('show');
+        $("qNext").classList.add('show');$("qNext").textContent=idx<Q.length-1?"Következő →":"Eredmény →";
+      });
+      $("qOpts").appendChild(b);
+    });
+  }
+  $("qNext").addEventListener('click',()=>{
+    idx++;
+    if(idx<Q.length)show();
+    else{$("quizMain").style.display='none';$("quizResult").classList.add('show');$("qFinal").textContent=score+" / "+Q.length;
+      const r=score/Q.length;
+      $("qMsg").textContent=r>=0.9?"Kiváló! A lamellás módszer és a kifutási típusok a kisujjadban vannak.":
+        r>=0.7?"Szép munka! Egy-két részlet még csiszolható — nézd át a Bishop-iterációt és a típusokat.":
+        r>=0.5?"Jó alap. Játssz még a szimulátorral, és próbáld újra.":
+        "Görgess vissza az alapokhoz, és próbáld újra — a szimulátor sokat segít!";
+    }
+  });
+  $("qRestart").addEventListener('click',start);
+  start();
+})();
+
 })();
 </script>
-
-<style>
-/* Magyar tipográfia — kiegyensúlyozott, olvasható tördelés */
-body{text-wrap:pretty}
-p,li,.callout,.eqnote,.scn .d,.subtitle{text-wrap:pretty;hyphens:none}
-h1,h2,h3,h4,.quiz .q{text-wrap:balance}
-.nowrap{white-space:nowrap}
-</style>
-
 </body>
 </html>
