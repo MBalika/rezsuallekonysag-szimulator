@@ -360,7 +360,7 @@ function computeF(circle,n){
   if(!circle) return null;
   var xc=circle.xc, yc=circle.yc, R=circle.R, g=geom();
   // a csúszótömeg x-tartománya: ahol az alsó ív a felszín alatt van
-  var x0=Math.max(g.crestX,xc-R), x1=Math.min(g.end,xc+R);
+  var x0=xc-R, x1=Math.min(g.end,xc+R);
   if(x1-x0<=0.3) return null;
   // a LEGSZÉLESEBB összefüggő szakasz, ahol az ív a felszín alatt van (= a valódi csúszótömeg)
   var step=(x1-x0)/500, curStart=null, lo=null, hi=null;
@@ -394,26 +394,25 @@ function computeF(circle,n){
 
 /* ============ Kritikus kör keresése ============ */
 function searchCritical(){
-  // LÁBKÖRÖK: minden próbakör átmegy a lábponton (toeX,0), így a csúszólap a koronától a lábig fut
-  var g=geom(), best=null, cands=[];
+  // LÁBKÖRÖK: minden próbakör átmegy a lábponton (toeX,0). A nyertes a koronaél környékén
+  // lép ki a felszínre (a csúszólap felfut a terepszintig), és pozitív hajtóerejű (valós megcsúszás).
+  var g=geom(), best=null, bestNear=null, cands=[];
   var tx=g.toeX, ty=0;
-  for(var a=0;a<16;a++){
-    var xc=g.crestX - 0.30*g.run + 0.95*g.run*a/15;   // a középpont a felső–középső rézsű fölött
+  var loMin=g.crestX-0.35*g.run, loMax=g.crestX+0.55*g.run; // a belépés a koronaél közelében
+  for(var a=0;a<18;a++){
+    var xc=g.crestX - 0.40*g.run + g.run*a/17;
     for(var b=0;b<16;b++){
-      var yc=g.H + g.run*(0.12 + 1.75*b/15);          // a rézsű fölött
+      var yc=g.H + g.run*(0.10 + 1.7*b/15);
       var R=Math.sqrt((xc-tx)*(xc-tx)+(yc-ty)*(yc-ty)); // a lábponton átmegy
-      var circle={xc:xc,yc:yc,R:R};
-      var r=computeF(circle,12);
-      if(!r||!isFinite(r.F)||r.F<=0.05||r.F>12) continue; // pozitív hajtóerejű, valós mechanizmus
-      circle.F=r.F; cands.push(circle);
+      var r=computeF({xc:xc,yc:yc,R:R},12);
+      if(!r||!isFinite(r.F)||r.F<=0.1||r.F>10||r.den<=0.5) continue; // valós, megcsúsztató mechanizmus
+      var circle={xc:xc,yc:yc,R:R,F:r.F};
+      cands.push(circle);
       if(!best||r.F<best.F) best=circle;
+      if(r.lo>=loMin && r.lo<=loMax && (!bestNear||r.F<bestNear.F)) bestNear=circle; // koronaél közelében kilépő
     }
   }
-  if(!best){ // tartalék lábkör
-    var xc2=g.crestX+0.25*g.run, yc2=g.H+g.run*0.8, R2=Math.sqrt((xc2-tx)*(xc2-tx)+yc2*yc2);
-    best={xc:xc2,yc:yc2,R:R2};
-  }
-  return {best:best, cands:cands};
+  return {best: bestNear||best, cands:cands};
 }
 
 /* ============ Rajz ============ */
@@ -540,7 +539,7 @@ function draw(){
   // verzió-bélyeg (cache-ellenőrzéshez) — jól látható badge bal felül
   ctx.fillStyle='#C0512A'; ctx.fillRect(8,8,108,22);
   ctx.fillStyle='#ffffff'; ctx.font='bold 12px JetBrains Mono';
-  ctx.fillText('BUILD v8',18,23);
+  ctx.fillText('BUILD v9',18,23);
 }
 
 /* ============ UI frissítés ============ */
