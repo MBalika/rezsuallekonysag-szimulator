@@ -647,14 +647,15 @@ $("findCrit").addEventListener('click',()=>{
     if(i<valid.length){ searchRAF=requestAnimationFrame(frame); }
     else { searchRAF=0; S.yw=ywSave;
       S.xc=Math.round(best.cx*2)/2;S.yc=Math.round(best.cy*2)/2;S.R=Math.round(best.R*2)/2;
-      syncInputs(); update(); btn.disabled=false; btn.textContent=oldTxt; }
+      syncInputs(); update(); btn.disabled=false; btn.textContent=oldTxt;
+      setTimeout(playSlide, 500); }   // a kritikus körön villantsa fel a megcsúszást
   }
   searchRAF=requestAnimationFrame(frame);
 });
 $("resetSim").addEventListener('click',()=>{slideAng=0;Object.assign(S,DEF);syncInputs();update();});
 
 /* megcsúszás-animáció: a csúszótömeg a kör középpontja körül lefelé fordul a lejtőn */
-$("slideBtn").addEventListener('click',()=>{
+function playSlide(){
   if(slideRAF)cancelAnimationFrame(slideRAF);
   const t0=performance.now(), dur=1300, maxA=12;
   function step(now){
@@ -665,7 +666,8 @@ $("slideBtn").addEventListener('click',()=>{
     else { setTimeout(()=>{ slideAng=0; update(); }, 700); }
   }
   slideRAF=requestAnimationFrame(step);
-});
+}
+$("slideBtn").addEventListener('click',playSlide);
 
 /* init */
 syncInputs();update();
