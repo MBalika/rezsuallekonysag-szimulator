@@ -439,11 +439,13 @@ function searchCritical(){
         var R=g.H*0.80 + g.H*2.6*ci/12;
         if(yc-R > g.H*0.50) continue;                    // érjen le a talp közelébe
         var r=computeF({xc:xc,yc:yc,R:R},12);
-        if(!r||!isFinite(r.F)||r.F<=0.1||r.F>12) continue;
-        var circle={xc:xc,yc:yc,R:R,F:r.F};
+        if(!r) continue;
+        var Fv=(st.method==='bishop'? r.Fb : r.F);   // a választott módszer F-jére optimalizál
+        if(!isFinite(Fv)||Fv<=0.1||Fv>12) continue;
+        var circle={xc:xc,yc:yc,R:R,F:Fv};
         cands.push(circle);
-        if(!best||r.F<best.F) best=circle;
-        if(r.hi>=g.toeX-0.18*g.run && (!bestToe||r.F<bestToe.F)) bestToe=circle; // a lábhoz közel lép ki
+        if(!best||Fv<best.F) best=circle;
+        if(r.hi>=g.toeX-0.18*g.run && (!bestToe||Fv<bestToe.F)) bestToe=circle; // a lábhoz közel lép ki
       }
     }
   }
@@ -574,7 +576,7 @@ function draw(){
   // verzió-bélyeg (cache-ellenőrzéshez) — jól látható badge bal felül
   ctx.fillStyle='#C0512A'; ctx.fillRect(8,8,108,22);
   ctx.fillStyle='#ffffff'; ctx.font='bold 12px JetBrains Mono';
-  ctx.fillText('BUILD v16',18,23);
+  ctx.fillText('BUILD v17',18,23);
 }
 
 /* ============ UI frissítés ============ */
