@@ -123,6 +123,11 @@ button.act.ghost:hover{background:var(--concrete-lt)}
 .fnote{font-size:0.88rem;color:var(--ink-mute);margin:0}
 .fformula{font-family:'JetBrains Mono';font-size:0.82rem;color:var(--steel-dk);background:#F1EEE7;border-radius:6px;padding:7px 10px;margin-top:8px;line-height:1.7}
 .fformula .num{color:var(--moss);font-weight:700}.fformula .den{color:var(--rebar);font-weight:700}
+.methodtog{display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap}
+.methodtog .mlbl{font-size:0.85rem;font-weight:600}
+.mbtn{background:#fff;border:1px solid var(--line-strong);border-radius:99px;padding:4px 14px;font-size:0.82rem;font-weight:600;cursor:pointer;color:var(--ink-mute)}
+.mbtn.active{background:var(--steel);color:#fff;border-color:var(--steel)}
+.methodtog .mhint{font-size:0.74rem;color:var(--ink-mute)}
 .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:0.78rem;color:var(--ink-mute);margin:8px 2px 0}
 .legend span{display:inline-flex;align-items:center;gap:5px}
 .legend i{width:13px;height:13px;border-radius:3px;display:inline-block}
@@ -218,6 +223,10 @@ button.act.ghost:hover{background:var(--concrete-lt)}
     <h3>A kritikus csúszólap</h3>
     <p>Végtelen sok körív rajzolható. A&nbsp;mérnököt a&nbsp;<b>legveszélyesebb</b> érdekli: az&nbsp;a&nbsp;kör, amelyhez a&nbsp;<b>legkisebb</b> F&nbsp;tartozik. A&nbsp;szimulátor a&nbsp;középpontok és&nbsp;sugarak rácsán végigpásztáz, és&nbsp;megkeresi ezt a&nbsp;kritikus csúszólapot — animálva mutatja, ahogy a&nbsp;próbakörök közül kiválik a&nbsp;legkisebb F.</p>
     <div class="callout note"><b>Érdekesség (végtelen rézsű).</b> Tiszta szemcsés talajra, víz nélkül a&nbsp;lankás rézsű biztonsága a&nbsp;geometriától független egyszerű alakot ölt: <span class="nowrap">F = tanφ′ / tanβ</span>. Ezért nem áll meg meredekebben egy száraz homokkupac, mint a&nbsp;rézsűszöge (φ′). A&nbsp;kohézió és&nbsp;a&nbsp;víz ezt írja át.</div>
+      <h3>Fellenius vs. Bishop</h3>
+      <p>A&nbsp;<b>Fellenius</b> (svéd) módszer elhanyagolja a&nbsp;lamellák közötti erőket — egyszerű, de&nbsp;kissé <b>konzervatív</b> (alábecsli az&nbsp;F-et). A&nbsp;<b>Bishop egyszerűsített</b> módszer figyelembe veszi a&nbsp;lamellák közötti vízszintes erőket, ezért pontosabb. Iteratív, mert az&nbsp;F a&nbsp;jobb oldalon is szerepel:</p>
+      <div class="callout formula">F = Σ[ (c′·b + W·tanφ′) / m<sub>α</sub> ] / Σ[ W·sinα ],&nbsp;&nbsp; m<sub>α</sub> = cosα + sinα·tanφ′ / F</div>
+      <p>A&nbsp;Fellenius-F-ből indulva néhány iteráció alatt konvergál; a&nbsp;Bishop-érték jellemzően <b>néhány százalékkal nagyobb</b>. A&nbsp;szimulátorban a&nbsp;két érték egymás mellett látszik — válts a&nbsp;<b>Fellenius / Bishop</b> gombbal a&nbsp;biztonsági tényező alatt.</p>
   </div>
 </div>
 
@@ -243,6 +252,12 @@ button.act.ghost:hover{background:var(--concrete-lt)}
       <p class="fverdict" id="fverdict">F = —</p>
       <p class="fnote" id="fnote">Állítsd a&nbsp;csúszkákat, vagy keresd meg a&nbsp;kritikus csúszólapot.</p>
       <div class="fformula" id="fformula"></div>
+      <div class="methodtog">
+        <span class="mlbl">Módszer:</span>
+        <button id="mFell" class="mbtn active">Fellenius</button>
+        <button id="mBish" class="mbtn">Bishop</button>
+        <span class="mhint">a&nbsp;Bishop pontosabb (a&nbsp;lamellák közötti erőket is figyelembe veszi)</span>
+      </div>
     </div>
   </div>
 
@@ -340,7 +355,7 @@ document.querySelectorAll('#chTabs button').forEach(function(b){
 
 /* ============ Állapot ============ */
 var GW=9.81;
-var st={H:10,beta:32,c:8,phi:26,gamma:19,n:12,
+var st={H:10,beta:32,c:8,phi:26,gamma:19,n:12, method:'fellenius',
         circle:null, showForces:false, showSlices:true, slideT:0, sliding:false};
 
 /* Geometria (méter) */
@@ -388,8 +403,26 @@ function computeF(circle,n){
     num+=resist; den+=drive;
     rows.push({i:i+1,xm:xm,h:h,alpha:alpha*180/Math.PI,W:W,resist:resist,drive:drive});
   }
-  if(den<=0.01) return {F:9.99,num:num,den:den,rows:rows,lo:lo,hi:hi};
-  return {F:num/den,num:num,den:den,rows:rows,lo:lo,hi:hi};
+  // Bishop (egyszerűsített), iteratív, száraz (u=0):
+  // F = Σ[ (c'·b + W·tanφ') / mα ] / Σ[ W·sinα ],   mα = cosα + sinα·tanφ'/F
+  var tanphi=Math.tan(st.phi*Math.PI/180), Ffell=(den>0.01)?num/den:9.99, Fb=Ffell;
+  if(den>0.01){
+    for(var it=0;it<60;it++){
+      var sb=0;
+      for(var ri=0;ri<rows.length;ri++){
+        var al=rows[ri].alpha*Math.PI/180;
+        var ma=Math.cos(al)+Math.sin(al)*tanphi/Fb;
+        if(ma<0.2) ma=0.2;
+        sb += (st.c*b + rows[ri].W*tanphi)/ma;
+      }
+      var Fn=sb/den;
+      if(!isFinite(Fn)||Fn<=0){ Fb=Ffell; break; }
+      if(Math.abs(Fn-Fb)<1e-4){ Fb=Fn; break; }
+      Fb=Fn;
+    }
+  }
+  if(den<=0.01) return {F:9.99,Fb:9.99,num:num,den:den,rows:rows,lo:lo,hi:hi};
+  return {F:num/den,Fb:Fb,num:num,den:den,rows:rows,lo:lo,hi:hi};
 }
 
 /* ============ Kritikus kör keresése ============ */
@@ -541,7 +574,7 @@ function draw(){
   // verzió-bélyeg (cache-ellenőrzéshez) — jól látható badge bal felül
   ctx.fillStyle='#C0512A'; ctx.fillRect(8,8,108,22);
   ctx.fillStyle='#ffffff'; ctx.font='bold 12px JetBrains Mono';
-  ctx.fillText('BUILD v15',18,23);
+  ctx.fillText('BUILD v16',18,23);
 }
 
 /* ============ UI frissítés ============ */
@@ -549,7 +582,7 @@ function setVerdict(F){
   var v=document.getElementById('fverdict'), n=document.getElementById('fnote'), nd=document.getElementById('needle');
   var hint=document.getElementById('hint');
   if(F===null){ v.textContent='F = —'; v.className='fverdict'; n.textContent='Nincs érvényes csúszólap — keresd meg a kritikusat.'; document.getElementById('fformula').textContent=''; return; }
-  v.textContent='F = '+F.toFixed(2);
+  v.textContent='F = '+F.toFixed(2)+(st.method==='bishop'?'  (Bishop)':'  (Fellenius)');
   // tű: F 0..2.5 → szög -90..+90°
   var ang=Math.max(-90,Math.min(90,(Math.min(F,2.5)/2.5)*180-90));
   nd.setAttribute('transform','rotate('+ang+' 75 86)');
@@ -559,9 +592,11 @@ function setVerdict(F){
 }
 function updateFormula(r){
   var f=document.getElementById('fformula');
-  if(!r){f.textContent='';return;}
-  f.innerHTML='F = <span class="num">Σ megtartó</span> / <span class="den">Σ megcsúsztató</span> = '+
-    '<span class="num">'+r.num.toFixed(0)+' kN/m</span> / <span class="den">'+r.den.toFixed(0)+' kN/m</span> = <b>'+(r.den<=0.01?'≫1':(r.num/r.den).toFixed(2))+'</b>';
+  if(!r){f.innerHTML='';return;}
+  var Ff=(r.den<=0.01)?null:r.num/r.den, selB=(st.method==='bishop');
+  f.innerHTML=
+    '<div'+(selB?'':' style="font-weight:700"')+'>Fellenius: F = <span class="num">'+r.num.toFixed(0)+'</span> / <span class="den">'+r.den.toFixed(0)+'</span> = '+(Ff?Ff.toFixed(2):'≫1')+'</div>'+
+    '<div'+(selB?' style="font-weight:700"':'')+'>Bishop (iteratív): F = '+((r.Fb&&isFinite(r.Fb))?r.Fb.toFixed(2):'≫1')+'</div>';
 }
 function updateTable(r){
   var t=document.getElementById('sltable'); if(!r){t.innerHTML='';return;}
@@ -574,7 +609,7 @@ function recompute(){
   if(!st.circle){ var s=searchCritical(); st.circle=s.best; }
   var r=st.circle?computeF(st.circle,st.n):null;
   if(st.circle && r){ st.circle._lo=r.lo; st.circle._hi=r.hi; }
-  setVerdict(r?r.F:null); updateFormula(r); updateTable(r);
+  setVerdict(r? (st.method==='bishop'?r.Fb:r.F) : null); updateFormula(r); updateTable(r);
   if(!st.sliding) fitView();
   draw();
 }
@@ -596,6 +631,8 @@ document.getElementById('sN').addEventListener('input',function(){ st.n=parseInt
 document.getElementById('tgForces').addEventListener('change',function(){st.showForces=this.checked;draw();});
 document.getElementById('tgSlices').addEventListener('change',function(){st.showSlices=this.checked;draw();});
 document.getElementById('tgTable').addEventListener('change',function(){document.getElementById('tableWrap').style.display=this.checked?'block':'none';if(this.checked)recompute();});
+document.getElementById('mFell').addEventListener('click',function(){st.method='fellenius';this.classList.add('active');document.getElementById('mBish').classList.remove('active');recompute();});
+document.getElementById('mBish').addEventListener('click',function(){st.method='bishop';this.classList.add('active');document.getElementById('mFell').classList.remove('active');recompute();});
 
 /* ============ Kritikus kör keresés animáció ============ */
 var searchAnim=null;
