@@ -270,7 +270,7 @@ footer{max-width:1040px;margin:3rem auto 0;padding:2rem 1.5rem 3rem;border-top:1
 <section id="szimulator" class="reveal">
   <div class="eyebrow">6 · A fő attrakció</div>
   <h2>Interaktív rézsűállékonyság-szimulátor</h2>
-  <p class="lead">Húzd a kör <strong>középpontját</strong> (a fehér O fogantyú) az ábrán, vagy állítsd a csúszkákkal. A csúszólap rárajzolódik a rézsűre, lamellákra bomlik, és a Fellenius- meg a Bishop-féle F <strong>élőben</strong> frissül. A státuszsávban látod a kifutási típust is.</p>
+  <p class="lead">Húzd a kör <strong>középpontját</strong> (a fehér O fogantyú) az ábrán, vagy állítsd a csúszkákkal. A csúszólap rárajzolódik a rézsűre, lamellákra bomlik, és a Fellenius- meg a Bishop-féle biztonsági tényező (F) <strong>élőben</strong> frissül. A státuszsávban látod a kifutási típust is.</p>
   <div class="panel">
     <div class="sim">
       <div>
@@ -286,6 +286,10 @@ footer{max-width:1040px;margin:3rem auto 0;padding:2rem 1.5rem 3rem;border-top:1
         <div class="result-grid">
           <div class="res fell"><div class="res-lab">Fellenius</div><div class="res-val" id="fFell">—</div><div class="res-sub">rendes lamellás</div></div>
           <div class="res bish"><div class="res-lab">Bishop</div><div class="res-val" id="fBish">—</div><div class="res-sub">egyszerűsített, iteratív</div></div>
+        </div>
+        <div class="ctrl">
+          <label>Felszíni teher q [kPa] <span class="val" id="surqV"></span></label>
+          <input type="range" id="surq" min="0" max="60" step="1">
         </div>
         <div class="ctrl">
           <label>Kör középpont X <span class="val" id="xcV"></span></label>
@@ -346,7 +350,7 @@ footer{max-width:1040px;margin:3rem auto 0;padding:2rem 1.5rem 3rem;border-top:1
 const $=id=>document.getElementById(id);
 
 /* ───────────────── ÁLLAPOT ───────────────── */
-const S={xc:-3,yc:17,R:18,c:10,phi:20,gam:18,yw:0,H:10,beta:30,n:16};
+const S={xc:-3,yc:17,R:18,c:10,phi:20,gam:18,yw:0,H:10,beta:30,n:16,q:0};
 const DEF=Object.assign({},S);
 
 /* ───────────────── GEOMETRIA ─────────────────
@@ -407,7 +411,7 @@ function analyse(){
     if(Math.abs(sina)>=0.999)return{valid:false,reason:'A kör túl lapos a szélén (|sinα|≈1).'};
     const alpha=Math.asin(sina), cosa=Math.cos(alpha);
     const l=b/cosa;
-    const W=S.gam*b*h;
+    const W=S.gam*b*h + ((yt>=S.H-1e-6)?S.q*b:0);   // + felszíni teher a koronán (q·b)
     // pórusnyomás: a talp a vízszint (yw, a láb felett) alatt van-e
     const u=Math.max(0,(S.yw-yb))*gw;
     const driving=W*sina;
@@ -488,6 +492,18 @@ function draw(res){
     svgStr+='<text x="28" y="'+ty.toFixed(1)+'" font-family="JetBrains Mono" font-size="10.5" fill="#1b6fae">talajvízszint · y_w = '+S.yw.toFixed(1)+' m</text>';
   }
 
+  // felszíni teher (q) a koronán — lefelé mutató nyilak
+  if(S.q>0){
+    const cyS=P(0,S.H,v)[1], xRr=P(xCrest(),S.H,v)[0], xLl=10, ah=15;
+    svgStr+='<line x1="'+xLl+'" y1="'+(cyS-ah).toFixed(1)+'" x2="'+xRr.toFixed(1)+'" y2="'+(cyS-ah).toFixed(1)+'" stroke="#7a4a12" stroke-width="1.3"/>';
+    const na=Math.max(3,Math.round((xRr-xLl)/26));
+    for(let i=0;i<=na;i++){const ax=xLl+(xRr-xLl)*i/na;
+      svgStr+='<line x1="'+ax.toFixed(1)+'" y1="'+(cyS-ah).toFixed(1)+'" x2="'+ax.toFixed(1)+'" y2="'+(cyS-1).toFixed(1)+'" stroke="#7a4a12" stroke-width="1.2"/>';
+      svgStr+='<path d="M'+(ax-3).toFixed(1)+' '+(cyS-5).toFixed(1)+' L'+(ax+3).toFixed(1)+' '+(cyS-5).toFixed(1)+' L'+ax.toFixed(1)+' '+(cyS+0.5).toFixed(1)+' z" fill="#7a4a12"/>';
+    }
+    svgStr+='<text x="'+xLl+'" y="'+(cyS-ah-4).toFixed(1)+'" font-family="JetBrains Mono" font-size="10.5" fill="#7a4a12">q = '+S.q+' kPa</text>';
+  }
+
   if(res.valid){
     const col = res.type==='toe'?'#c2521f':res.type==='slope'?'#b87514':'#2f59c4';
     // teljes kör halványan
@@ -538,6 +554,7 @@ function fbadge(F){if(F===null||!isFinite(F))return'';return F>=1.5?'<span class
 function update(){
   // csúszka-értékek
   $("xcV").textContent=S.xc.toFixed(1)+" m";$("ycV").textContent=S.yc.toFixed(1)+" m";$("rV").textContent=S.R.toFixed(1)+" m";
+  $("surqV").textContent=S.q+" kPa";
   $("cV").textContent=S.c+" kPa";$("phiV").textContent=S.phi+"°";$("gV").textContent=S.gam+" kN/m³";
   $("wV").textContent=S.yw.toFixed(1)+" m";$("hV").textContent=S.H.toFixed(1)+" m";$("bV").textContent=S.beta+"°";$("nV").textContent=S.n;
   const res=analyse();
@@ -594,7 +611,7 @@ window.addEventListener('pointermove',e=>{
 window.addEventListener('pointerup',()=>{if(dragging){dragging=false;const h=$("handle");if(h)h.style.cursor='grab';}});
 
 /* ───────────────── CSÚSZKÁK ───────────────── */
-const bind=[['xc','xc'],['yc','yc'],['rr','R'],['cc','c'],['phi','phi'],['gam','gam'],['yw','yw'],['hh','H'],['beta','beta'],['ns','n']];
+const bind=[['xc','xc'],['yc','yc'],['rr','R'],['cc','c'],['phi','phi'],['gam','gam'],['yw','yw'],['hh','H'],['beta','beta'],['ns','n'],['surq','q']];
 function syncInputs(){bind.forEach(([id,key])=>{$(id).value=S[key];});}
 bind.forEach(([id,key])=>{
   $(id).addEventListener('input',()=>{S[key]=parseFloat($(id).value);update();});
@@ -722,6 +739,9 @@ syncInputs();update();
 body{text-wrap:pretty}
 p,li,.lead,.hero-sub,.card p,.note,.panel-sub,.res-sub,.quiz-opt,.quiz-expl,.formula small,.hero-eq small{text-wrap:pretty;hyphens:none}
 h1,h2,h3,h4,.quiz-q,.panel-title{text-wrap:balance}
+/* a képlet-dobozok egy sorban maradnak (ha hosszú, vízszintesen görgethető), nem törnek szét */
+.formula,.hero-eq{white-space:nowrap}
+.formula small,.hero-eq small{white-space:normal}
 .nowrap{white-space:nowrap}
 </style>
 
@@ -730,7 +750,7 @@ h1,h2,h3,h4,.quiz-q,.panel-title{text-wrap:balance}
 (function(){
   "use strict";
   var NBSP=' ', WJ='⁠';
-  function math(s){ return s.replace(/ (?=[=+−·×<>])/g,NBSP).replace(/([=+−·×<>]) /g,'$1'+NBSP); }
+  function math(s){ return s.replace(/ (?=[=+−·×<>≈≥≤≠\/])/g,NBSP).replace(/([=+−·×<>≈≥≤≠\/]) /g,'$1'+NBSP); }
   function units(s){ return s.replace(/(\d) (?=(?:kPa|MPa|GPa|kN\/m³|kN\/m²|kN|m³|m²|m\/s|cm|mm|km|kg|°C|°|%|m|t|óra|nap|hét|hónap|év)(?:[\s.,;:!?)\]–—]|$))/g,'$1'+NBSP); }
   function shortWords(s){ return s.replace(/(^|[\s(„"'»–—])(a|az|s|e|é|és|is)(?: )(?=\S)/gi,'$1$2'+NBSP); }
   function dashes(s){ return s.replace(/([0-9A-Za-zÀ-ÿ])([-–—])([0-9A-Za-zÀ-ÿ])/g,'$1'+WJ+'$2'+WJ+'$3'); }
