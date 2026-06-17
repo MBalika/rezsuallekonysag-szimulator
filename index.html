@@ -377,17 +377,24 @@ function analyze(par){
 
 /* ====== world <-> screen ====== */
 let T={};
-function setTransform(){
+function setTransform(res){
   const B=Bspan();
-  const xmin=Math.min(-0.45*B,-2), xmax=Math.max(1.55*B,B+2);
-  const ymin=-0.18*P.H, ymax=Math.max(1.55*P.H,P.cy+2);
+  let xmin=Math.min(-0.45*B,-2), xmax=Math.max(1.55*B,B+2);
+  let ymin=-0.18*P.H, ymax=Math.max(1.55*P.H,P.cy+2);
+  // a terepmodell mindig túlérjen a csúszólapon (margóval), hogy az ív sehol ne fusson le a terepről
+  if(res&&res.valid){
+    const m=Math.max(1.5,0.12*Math.max(B,1));
+    xmin=Math.min(xmin,res.xL-m); xmax=Math.max(xmax,res.xR+m);
+    let arcLow=(P.cx>=res.xL&&P.cx<=res.xR)?(P.cy-P.R):Math.min(circBot(res.xL),circBot(res.xR));
+    if(isFinite(arcLow)) ymin=Math.min(ymin,arcLow-1);
+  }
   const W=cv.clientWidth||760, Hpx=Math.round(W*0.60);
   cv.style.height=Hpx+'px';
   const dpr=Math.min(window.devicePixelRatio||1,2);
   cv.width=W*dpr; cv.height=Hpx*dpr; ctx.setTransform(dpr,0,0,dpr,0,0);
   const pad=26, s=Math.min((W-2*pad)/(xmax-xmin),(Hpx-2*pad)/(ymax-ymin));
   const ox=pad+((W-2*pad)-s*(xmax-xmin))/2, oy=pad+((Hpx-2*pad)-s*(ymax-ymin))/2;
-  T={s,xmin,ymax,ox,oy,W,Hpx};
+  T={s,xmin,xmax,ymin,ymax,ox,oy,W,Hpx};
 }
 const sx=x=>T.ox+(x-T.xmin)*T.s;
 const sy=y=>T.oy+(T.ymax-y)*T.s;
@@ -396,20 +403,20 @@ const cssv=n=>getComputedStyle(document.documentElement).getPropertyValue(n).tri
 
 /* ====== rajz ====== */
 function draw(res){
-  setTransform();
+  setTransform(res);
   const W=T.W,Hpx=T.Hpx,B=Bspan();
   ctx.clearRect(0,0,W,Hpx);
   ctx.fillStyle='#EEF4F2'; ctx.fillRect(0,0,W,Hpx);
-  const left=T.xmin, right=Math.max(1.55*B,B+2);
-  const grad=ctx.createLinearGradient(0,sy(P.H),0,sy(-0.18*P.H));
+  const left=T.xmin, right=T.xmax, bot=T.ymin;
+  const grad=ctx.createLinearGradient(0,sy(P.H),0,sy(bot));
   grad.addColorStop(0,'#D2C2A6'); grad.addColorStop(1,'#9c6a32');
   ctx.beginPath();
   ctx.moveTo(sx(left),sy(0)); ctx.lineTo(sx(0),sy(0)); ctx.lineTo(sx(B),sy(P.H));
-  ctx.lineTo(sx(right),sy(P.H)); ctx.lineTo(sx(right),sy(-0.18*P.H)); ctx.lineTo(sx(left),sy(-0.18*P.H));
+  ctx.lineTo(sx(right),sy(P.H)); ctx.lineTo(sx(right),sy(bot)); ctx.lineTo(sx(left),sy(bot));
   ctx.closePath(); ctx.fillStyle=grad; ctx.fill();
   ctx.save(); ctx.clip();
   ctx.strokeStyle='rgba(124,90,56,.10)'; ctx.lineWidth=1;
-  for(let gx=left;gx<right+P.H;gx+=P.H/6){ctx.beginPath();ctx.moveTo(sx(gx),sy(P.H));ctx.lineTo(sx(gx-P.H),sy(-0.18*P.H));ctx.stroke();}
+  for(let gx=left;gx<right+P.H;gx+=P.H/6){ctx.beginPath();ctx.moveTo(sx(gx),sy(P.H));ctx.lineTo(sx(gx-P.H),sy(bot));ctx.stroke();}
   ctx.restore();
 
   if(res && res.valid){
@@ -456,10 +463,11 @@ function draw(res){
   ctx.lineTo(sx(B),sy(P.H)); ctx.lineTo(sx(right),sy(P.H));
   ctx.strokeStyle='#5a3d1a'; ctx.lineWidth=2; ctx.stroke();
 
+  const xHd=Math.min(B+1.0,right-0.4);
   ctx.strokeStyle='rgba(40,30,20,.4)'; ctx.lineWidth=1; ctx.setLineDash([2,3]);
-  ctx.beginPath();ctx.moveTo(sx(right)-4,sy(0));ctx.lineTo(sx(right)-4,sy(P.H));ctx.stroke();ctx.setLineDash([]);
-  ctx.fillStyle='rgba(40,30,20,.72)'; ctx.font="500 11px 'JetBrains Mono'"; ctx.textAlign='right';
-  ctx.fillText('H='+P.H.toFixed(1)+' m', sx(right)-8, sy(P.H/2));
+  ctx.beginPath();ctx.moveTo(sx(xHd),sy(0));ctx.lineTo(sx(xHd),sy(P.H));ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle='rgba(40,30,20,.72)'; ctx.font="500 11px 'JetBrains Mono'"; ctx.textAlign='left';
+  ctx.fillText('H='+P.H.toFixed(1)+' m', sx(xHd)+5, sy(P.H/2));
 
   const HX=sx(P.cx),HY=sy(P.cy);
   ctx.beginPath();ctx.arc(HX,HY,8,0,2*Math.PI); ctx.fillStyle=cssv('--accent'); ctx.fill();
@@ -472,7 +480,7 @@ function draw(res){
   // verzió-bélyeg
   ctx.fillStyle='#C0512A'; ctx.fillRect(8,Hpx-26,112,18);
   ctx.fillStyle='#fff'; ctx.font="700 11px 'JetBrains Mono'"; ctx.textAlign='left';
-  ctx.fillText('BUILD v18',16,Hpx-13);
+  ctx.fillText('BUILD v19',16,Hpx-13);
 }
 function arrow(x1,y1,x2,y2){ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
   const a=Math.atan2(y2-y1,x2-x1),h=4.5;
