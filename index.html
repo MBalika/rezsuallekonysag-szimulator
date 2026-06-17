@@ -360,7 +360,7 @@ function computeF(circle,n){
   if(!circle) return null;
   var xc=circle.xc, yc=circle.yc, R=circle.R, g=geom();
   // a csúszótömeg x-tartománya: ahol az alsó ív a felszín alatt van
-  var x0=Math.max(g.crestX-0.14*g.run,xc-R), x1=Math.min(g.end,xc+R);
+  var x0=xc-R, x1=Math.min(g.end,xc+R);
   if(x1-x0<=0.3) return null;
   // a LEGSZÉLESEBB összefüggő szakasz, ahol az ív a felszín alatt van (= a valódi csúszótömeg)
   var step=(x1-x0)/500, curStart=null, lo=null, hi=null;
@@ -394,28 +394,25 @@ function computeF(circle,n){
 
 /* ============ Kritikus kör keresése ============ */
 function searchCritical(){
-  // LÁBKÖRÖK: átmennek a lábponton (toeX,0) ÉS elnyelik a koronaélt (a korona a körön belül),
-  // így a csúszólap garantáltan a korona TETEJÉTŐL fut a lábig.
+  // A kör a teraszon (E, a korona mögött) ÉS a lábponton (T) is kilép a felszínre.
+  // Egyparaméteres körsereg E-n és T-n át (mélység-seprés); a nyertes a legkisebb F, pozitív hajtóerő mellett.
+  // Az ív így mindkét végén SIMÁN kifut a terepszintig (nincs függőleges repedés).
   var g=geom(), best=null, cands=[];
-  var tx=g.toeX, ty=0;
-  for(var a=0;a<18;a++){
-    var xc=g.crestX - 0.45*g.run + g.run*a/17;
-    for(var b=0;b<16;b++){
-      var yc=g.H + g.run*(0.12 + 1.75*b/15);
-      var R=Math.sqrt((xc-tx)*(xc-tx)+(yc-ty)*(yc-ty));
-      // a koronaél (crestX,H) legyen a körön BELÜL -> a csúszólap a koronától indul
-      if((g.crestX-xc)*(g.crestX-xc)+(yc-g.H)*(yc-g.H) >= R*R) continue;
-      var r=computeF({xc:xc,yc:yc,R:R},12);
-      if(!r||!isFinite(r.F)||r.F<=0.05||r.F>12) continue;
-      var circle={xc:xc,yc:yc,R:R,F:r.F};
-      cands.push(circle);
-      if(!best||r.F<best.F) best=circle;
-    }
+  var ex=g.crestX-0.25*g.run, ey=g.H, tx=g.toeX, ty=0;
+  var mx=(ex+tx)/2, my=(ey+ty)/2;
+  var dxv=tx-ex, dyv=ty-ey, D=Math.sqrt(dxv*dxv+dyv*dyv);
+  var nx=-dyv/D, ny=dxv/D; if(ny<0){nx=-nx;ny=-ny;} // a húrra merőleges, felfelé mutató irány
+  for(var k=0;k<70;k++){
+    var s=D*(0.05 + 1.5*k/69);
+    var xc=mx+nx*s, yc=my+ny*s;
+    var R=Math.sqrt((xc-ex)*(xc-ex)+(yc-ey)*(yc-ey)); // átmegy E-n és T-n
+    var r=computeF({xc:xc,yc:yc,R:R},14);
+    if(!r||!isFinite(r.F)||r.F<=0.1||r.F>15||r.den<=0.2) continue;
+    var circle={xc:xc,yc:yc,R:R,F:r.F};
+    cands.push(circle);
+    if(!best||r.F<best.F) best=circle;
   }
-  if(!best){ // tartalék: koronát elnyelő lábkör
-    var xc2=g.crestX, yc2=g.H+g.run*0.9, R2=Math.sqrt((xc2-tx)*(xc2-tx)+yc2*yc2);
-    best={xc:xc2,yc:yc2,R:R2};
-  }
+  if(!best){ var s2=D*0.5, x2=mx+nx*s2, y2=my+ny*s2; best={xc:x2,yc:y2,R:Math.sqrt((x2-ex)*(x2-ex)+(y2-ey)*(y2-ey))}; }
   return {best:best, cands:cands};
 }
 
@@ -433,7 +430,7 @@ function fitView(){
   if(st.circle){
     var c=st.circle, cb=c.yc-c.R-0.6; if(cb<wy0) wy0=cb;
     // a tényleges csúszólap-szakasz (belépéstől kilépésig) férjen be vízszintesen
-    if(c._lo!==undefined){ if(c._lo-1<wx0) wx0=c._lo-1; if(c._hi+1>wx1) wx1=c._hi+1; }
+    if(c._lo!==undefined){ if(c._lo-2<wx0) wx0=c._lo-2; if(c._hi+1>wx1) wx1=c._hi+1; }
   }
   var cw=cv.width/2, ch=cv.height/2, pad=14;
   var sx=(cw-2*pad)/(wx1-wx0), sy=(ch-2*pad)/(wy1-wy0);
@@ -514,12 +511,6 @@ function draw(){
     for(var xc2=lo;xc2<=hi;xc2+=0.3){var dd4=c.R*c.R-(xc2-c.xc)*(xc2-c.xc);if(dd4<0)continue;var yb4=c.yc-Math.sqrt(dd4);var q=rot(xc2,yb4); if(xc2===lo)ctx.moveTo(X(q[0]),Y(q[1]));else ctx.lineTo(X(q[0]),Y(q[1]));}
     ctx.strokeStyle='#C0512A'; ctx.lineWidth=3; ctx.stroke();
 
-    // a bal vég felfut a terepszintig (húzott repedés / tension crack a koronán)
-    var ddL=c.R*c.R-(lo-c.xc)*(lo-c.xc); var ybL=c.yc-Math.sqrt(Math.max(0,ddL));
-    var qa=rot(lo,ybL), qb=rot(lo,ground(lo));
-    ctx.beginPath(); ctx.moveTo(X(qa[0]),Y(qa[1])); ctx.lineTo(X(qb[0]),Y(qb[1]));
-    ctx.strokeStyle='#C0512A'; ctx.lineWidth=3; ctx.stroke();
-
     // erők egy lamellán (a középső)
     if(st.showForces && !st.sliding && r.rows.length){
       var mid=r.rows[Math.floor(r.rows.length/2)];
@@ -549,7 +540,7 @@ function draw(){
   // verzió-bélyeg (cache-ellenőrzéshez) — jól látható badge bal felül
   ctx.fillStyle='#C0512A'; ctx.fillRect(8,8,108,22);
   ctx.fillStyle='#ffffff'; ctx.font='bold 12px JetBrains Mono';
-  ctx.fillText('BUILD v12',18,23);
+  ctx.fillText('BUILD v13',18,23);
 }
 
 /* ============ UI frissítés ============ */
