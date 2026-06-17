@@ -394,25 +394,25 @@ function computeF(circle,n){
 
 /* ============ Kritikus kör keresése ============ */
 function searchCritical(){
-  // A kör a teraszon (E, a korona mögött) ÉS a lábponton (T) is kilép a felszínre.
-  // Egyparaméteres körsereg E-n és T-n át (mélység-seprés); a nyertes a legkisebb F, pozitív hajtóerő mellett.
-  // Az ív így mindkét végén SIMÁN kifut a terepszintig (nincs függőleges repedés).
+  // Általános középpont/sugár rács. Az F-szűrő (0,1 < F < 12) automatikusan kizárja a
+  // negatív/nulla hajtóerejű (nem megcsúszó) köröket, így csak VALÓS megcsúszási mechanizmusok
+  // maradnak. A nyertes a legkisebb F. Az ív a természetes kilépési pontjain fut ki a felszínre.
   var g=geom(), best=null, cands=[];
-  var ex=g.crestX-0.25*g.run, ey=g.H, tx=g.toeX, ty=0;
-  var mx=(ex+tx)/2, my=(ey+ty)/2;
-  var dxv=tx-ex, dyv=ty-ey, D=Math.sqrt(dxv*dxv+dyv*dyv);
-  var nx=-dyv/D, ny=dxv/D; if(ny<0){nx=-nx;ny=-ny;} // a húrra merőleges, felfelé mutató irány
-  for(var k=0;k<70;k++){
-    var s=D*(0.05 + 1.5*k/69);
-    var xc=mx+nx*s, yc=my+ny*s;
-    var R=Math.sqrt((xc-ex)*(xc-ex)+(yc-ey)*(yc-ey)); // átmegy E-n és T-n
-    var r=computeF({xc:xc,yc:yc,R:R},14);
-    if(!r||!isFinite(r.F)||r.F<=0.1||r.F>15||r.den<=0.2) continue;
-    var circle={xc:xc,yc:yc,R:R,F:r.F};
-    cands.push(circle);
-    if(!best||r.F<best.F) best=circle;
+  for(var ai=0;ai<13;ai++){
+    var xc=g.crestX - 0.40*g.run + 1.5*g.run*ai/12;     // korona mögöttől a láb fölöttig
+    for(var bi=0;bi<11;bi++){
+      var yc=g.H*0.90 + g.H*1.8*bi/10;                   // a rézsű fölött
+      for(var ci=0;ci<13;ci++){
+        var R=g.H*0.80 + g.H*2.6*ci/12;
+        if(yc-R > g.H*0.55) continue;                    // érjen le a rézsű aljához közel
+        var r=computeF({xc:xc,yc:yc,R:R},12);
+        if(!r||!isFinite(r.F)||r.F<=0.1||r.F>12) continue; // negatív hajtóerő (F<0) és den~0 (F=9.99) kiesik
+        var circle={xc:xc,yc:yc,R:R,F:r.F};
+        cands.push(circle);
+        if(!best||r.F<best.F) best=circle;
+      }
+    }
   }
-  if(!best){ var s2=D*0.5, x2=mx+nx*s2, y2=my+ny*s2; best={xc:x2,yc:y2,R:Math.sqrt((x2-ex)*(x2-ex)+(y2-ey)*(y2-ey))}; }
   return {best:best, cands:cands};
 }
 
@@ -540,7 +540,7 @@ function draw(){
   // verzió-bélyeg (cache-ellenőrzéshez) — jól látható badge bal felül
   ctx.fillStyle='#C0512A'; ctx.fillRect(8,8,108,22);
   ctx.fillStyle='#ffffff'; ctx.font='bold 12px JetBrains Mono';
-  ctx.fillText('BUILD v13',18,23);
+  ctx.fillText('BUILD v14',18,23);
 }
 
 /* ============ UI frissítés ============ */
