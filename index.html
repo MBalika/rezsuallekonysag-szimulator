@@ -77,8 +77,9 @@ table.dt td{padding:7px 11px;border-bottom:1px solid var(--line)}
 table.dt tr:nth-child(even) td{background:#F8F5F0}
 
 /* ===== Simulator ===== */
-.simgrid{display:grid;grid-template-columns:1fr 360px;gap:20px;align-items:start}
-@media(max-width:980px){.simgrid{grid-template-columns:1fr}}
+.simgrid{display:grid;grid-template-columns:1fr 320px;gap:18px;align-items:start}
+.simrow{display:grid;grid-template-columns:1fr 1fr 1.3fr;gap:18px;margin-top:18px;align-items:start}
+@media(max-width:980px){.simgrid,.simrow{grid-template-columns:1fr}}
 .stage{position:relative;background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
 canvas{display:block;width:100%;height:auto;touch-action:none;cursor:grab;background:#EEF4F2}
 canvas.dragging{cursor:grabbing}
@@ -89,12 +90,12 @@ canvas.dragging{cursor:grabbing}
 .fscard .tag{font-size:11px;font-weight:600;margin-top:2px}
 .invalid{position:absolute;inset:auto 14px 14px 14px;background:rgba(143,58,27,.95);color:#fff;padding:9px 13px;border-radius:10px;font-size:13px;font-weight:500;display:none}
 .cpanel{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:2px 16px 14px}
-.grp{padding:13px 0;border-bottom:1px solid var(--line)}
+.grp{padding:11px 0;border-bottom:1px solid var(--line)}
 .grp:last-child{border-bottom:none}
 .grp h4{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--rebar);margin:0 0 10px;font-weight:700;font-family:'Inter';display:flex;align-items:center;gap:8px}
 .grp h4::before{content:"";width:7px;height:7px;background:var(--rebar);transform:rotate(45deg);display:inline-block}
 .grp h4 .alap{margin-left:auto;background:var(--gold);color:#3A2A1A;font-size:0.6rem;font-weight:700;letter-spacing:.04em;padding:2px 7px;border-radius:99px;text-transform:none}
-.ctrl{margin:10px 0}
+.ctrl{margin:9px 0}
 .ctrl .row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px}
 .ctrl label{font-size:13px;font-weight:500}
 .ctrl .v{font-family:'JetBrains Mono';font-size:13px;font-weight:700;color:var(--steel-dk);font-variant-numeric:tabular-nums}
@@ -165,8 +166,7 @@ input[type=range].water::-webkit-slider-thumb{background:var(--azure)}
   <button class="active" data-target="page-bev"><span class="ch-num">0</span>Bevezetés</button>
   <button data-target="page-modszer"><span class="ch-num">1</span>A módszer</button>
   <button data-target="page-sim"><span class="ch-num">2</span>Szimulátor</button>
-  <button data-target="page-scn"><span class="ch-num">3</span>Forgatókönyvek</button>
-  <button data-target="page-kviz"><span class="ch-num">4</span>Kvíz</button>
+  <button data-target="page-kviz"><span class="ch-num">3</span>Kvíz</button>
 </div></nav>
 
 <main>
@@ -245,13 +245,20 @@ input[type=range].water::-webkit-slider-thumb{background:var(--azure)}
         <h4>Pórusvíznyomás</h4>
         <div class="ctrl"><div class="row"><label>r<sub>u</sub> = u / (γ·h)</label><span class="v" id="vru"></span></div><input class="water" type="range" id="ru" min="0" max="0.6" step="0.02"></div>
       </div>
+    </div>
+  </div>
+
+  <div class="simrow">
+    <div class="cpanel">
       <div class="grp">
         <h4>Csúszólap (kör)</h4>
         <div class="ctrl"><div class="row"><label>Középpont · X</label><span class="v" id="vcx"></span></div><input type="range" id="cx" min="-8" max="14" step="0.25"></div>
         <div class="ctrl"><div class="row"><label>Középpont · Y</label><span class="v" id="vcy"></span></div><input type="range" id="cy" min="6" max="34" step="0.25"></div>
         <div class="ctrl"><div class="row"><label>Sugár · R</label><span class="v" id="vR"></span></div><input type="range" id="R" min="8" max="40" step="0.25"></div>
-        <div class="ctrl"><div class="row"><label>Lamellák száma · n</label><span class="v" id="vn"></span></div><input type="range" id="n" min="6" max="60" step="1"></div>
+        <div class="ctrl"><div class="row"><label>Lamellák · n</label><span class="v" id="vn"></span></div><input type="range" id="n" min="6" max="60" step="1"></div>
       </div>
+    </div>
+    <div class="cpanel">
       <div class="grp">
         <h4>Módszer &amp; megjelenítés</h4>
         <div class="seg" id="methodSeg" role="group">
@@ -262,48 +269,31 @@ input[type=range].water::-webkit-slider-thumb{background:var(--azure)}
         <label class="chk"><input type="checkbox" id="showForces">Erők és&nbsp;lamellaszámok</label>
       </div>
       <div class="grp">
-        <h4>Műveletek</h4>
-        <div class="btnrow" style="margin-bottom:10px"><button class="btn primary" id="findCrit">⌖ Kritikus kör keresése</button></div>
+        <h4>Művelet</h4>
+        <div class="btnrow"><button class="btn primary" id="findCrit">⌖ Kritikus kör keresése</button></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>A számítás képletei (élő)</h3>
+      <div class="eq" id="eqFell">
+        <div><b>Fellenius</b></div>
+        FS = Σ[ c′·ℓ + (W·cosα − u·ℓ)·tanφ′ ] / Σ[ W·sinα ]<br>
+        FS = <span class="hl" id="fellNum">–</span> / <span class="hl" id="fellDen">–</span> = <span class="hl" id="fellFS">–</span>
+      </div>
+      <div class="eq" id="eqBish" style="margin-top:8px">
+        <div><b>Bishop</b> (iteratív) · m<sub>α</sub> = cosα + sinα·tanφ′/FS</div>
+        FS = Σ[ (c′·b + (W − u·b)·tanφ′) / m<sub>α</sub> ] / Σ[ W·sinα ]<br>
+        FS = <span class="hl" id="bishFS">–</span>&nbsp;(<span id="bishIter">–</span> iter.)
       </div>
     </div>
   </div>
 
-  <div class="below">
-    <div class="card">
-      <h3>A számítás képletei (aktuális értékekkel)</h3>
-      <div class="eq" id="eqFell">
-        <div><b>Fellenius</b> (közönséges lamellás)</div>
-        FS = Σ[ c′·ℓ<sub>i</sub> + (W<sub>i</sub>·cosα<sub>i</sub> − u<sub>i</sub>·ℓ<sub>i</sub>)·tanφ′ ] / Σ[ W<sub>i</sub>·sinα<sub>i</sub> ]<br>
-        FS = <span class="hl" id="fellNum">–</span> / <span class="hl" id="fellDen">–</span> = <span class="hl" id="fellFS">–</span>
-      </div>
-      <div class="eq" id="eqBish" style="margin-top:10px">
-        <div><b>Bishop egyszerűsített</b> (iteratív)</div>
-        FS = ( 1 / Σ W<sub>i</sub>sinα<sub>i</sub> ) · Σ[ (c′·b<sub>i</sub> + (W<sub>i</sub> − u<sub>i</sub>·b<sub>i</sub>)·tanφ′) / m<sub>α,i</sub> ]<br>
-        m<sub>α,i</sub> = cosα<sub>i</sub> + sinα<sub>i</sub>·tanφ′ / FS<br>
-        FS = <span class="hl" id="bishFS">–</span>&nbsp;(<span id="bishIter">–</span> iteráció)
-      </div>
-      <p class="eqnote">A&nbsp;Fellenius elhanyagolja a&nbsp;lamellák közötti erőket, ezért rendszerint kisebb (konzervatívabb) FS-t ad. φ′ = 0 esetén a&nbsp;két módszer egybeesik.</p>
-    </div>
+  <div class="below" style="grid-template-columns:1fr">
     <div class="card">
       <h3>Lamellánkénti adatok</h3>
       <div class="tablewrap"><table class="stable" id="sliceTable"><thead><tr><th>#</th><th>x [m]</th><th>h [m]</th><th>α [°]</th><th>W [kN]</th><th>u [kPa]</th></tr></thead><tbody></tbody></table></div>
-      <p class="eqnote">W a&nbsp;lamella súlya egységnyi rézsűhosszra (kN/m). α a&nbsp;lamella talpának hajlása; a&nbsp;pozitív α a&nbsp;lecsúszás irányába mutat.</p>
+      <p class="eqnote">W a&nbsp;lamella súlya egységnyi rézsűhosszra (kN/m). α a&nbsp;talp hajlása; a&nbsp;pozitív α a&nbsp;lecsúszás irányába mutat. A&nbsp;Fellenius elhanyagolja a&nbsp;lamellaközi erőket (konzervatívabb); φ′ = 0-nál a&nbsp;két módszer egybeesik.</p>
     </div>
-  </div>
-</div>
-
-<!-- ===== FORGATÓKÖNYVEK ===== -->
-<div class="chapter-page" id="page-scn">
-  <h2>3. Forgatókönyvek</h2>
-  <p>Egy&nbsp;kattintás beállítja a&nbsp;paramétereket, megkeresi a&nbsp;kritikus kört, és&nbsp;átvisz a&nbsp;Szimulátorra.</p>
-  <div class="scn" id="scnGrid"></div>
-  <div class="panel">
-    <h3 style="margin-top:0">Amit érdemes megfigyelni</h3>
-    <ul class="bullet">
-      <li><b>Pórusvíz (rᵤ):</b> emeld meg a&nbsp;„Vízzel telített" esetben — az&nbsp;F&nbsp;meredeken esik (a&nbsp;víz a&nbsp;leggyakoribb tönkremeneteli ok).</li>
-      <li><b>Fellenius vs. Bishop:</b> a&nbsp;Bishop néhány %-kal nagyobb — kivéve φ′ = 0-nál, ahol egybeesnek.</li>
-      <li><b>Rézsűhajlás (β):</b> meredekebb rézsű → nagyobb megcsúsztató erő → kisebb F.</li>
-    </ul>
   </div>
 </div>
 
@@ -476,11 +466,6 @@ function draw(res){
   ctx.strokeStyle='#fff';ctx.lineWidth=1.4;ctx.stroke();
   ctx.fillStyle=cssv('--accent'); ctx.font="600 10px 'JetBrains Mono'"; ctx.textAlign='left';
   ctx.fillText('O ('+P.cx.toFixed(1)+', '+P.cy.toFixed(1)+')  R='+P.R.toFixed(1), HX+12, HY-8);
-
-  // verzió-bélyeg
-  ctx.fillStyle='#C0512A'; ctx.fillRect(8,Hpx-26,112,18);
-  ctx.fillStyle='#fff'; ctx.font="700 11px 'JetBrains Mono'"; ctx.textAlign='left';
-  ctx.fillText('BUILD v19',16,Hpx-13);
 }
 function arrow(x1,y1,x2,y2){ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
   const a=Math.atan2(y2-y1,x2-x1),h=4.5;
@@ -555,24 +540,6 @@ $('findCrit').addEventListener('click',()=>{
     btn.textContent=old; btn.disabled=false;
   },30);
 });
-
-/* ====== forgatókönyvek ====== */
-const SCN=[
-  {k:'standard',t:'Közepes rézsű',d:'H=8 m, β=30°, c′=10, φ′=20, száraz.',v:{H:8,beta:30,gamma:19,c:10,phi:20,ru:0,cx:3,cy:20,R:20,n:30}},
-  {k:'wet',t:'Vízzel telített',d:'Magas pórusvíznyomás (rᵤ=0,4) — F leesik.',v:{H:8,beta:30,gamma:20,c:8,phi:18,ru:0.4,cx:3,cy:20,R:20,n:30}},
-  {k:'clay',t:'Kohéziós agyag (φ=0)',d:'Itt Fellenius és Bishop egybeesik.',v:{H:9,beta:38,gamma:19,c:35,phi:0,ru:0,cx:4,cy:21,R:21,n:30}},
-  {k:'sand',t:'Meredek homok',d:'c′≈0, nagy φ′ — a súrlódás tart.',v:{H:7,beta:42,gamma:18,c:2,phi:34,ru:0,cx:2,cy:16,R:15,n:30}}
-];
-const sg=$('scnGrid');
-SCN.forEach(s=>{const b=document.createElement('button');
-  b.innerHTML='<span class="t">'+s.t+'</span><span class="d">'+s.d+'</span>';
-  b.addEventListener('click',()=>{Object.assign(P,s.v); syncUI();
-    document.querySelectorAll('#chTabs button').forEach(x=>x.classList.remove('active'));
-    document.querySelectorAll('.chapter-page').forEach(x=>x.classList.remove('active'));
-    document.querySelector('#chTabs button[data-target="page-sim"]').classList.add('active');
-    $('page-sim').classList.add('active'); window.scrollTo({top:0,behavior:'smooth'});
-    requestAnimationFrame(()=>{update(); $('findCrit').click();});
-  }); sg.appendChild(b);});
 
 /* ====== kvíz ====== */
 const QZ=[
