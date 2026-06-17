@@ -586,7 +586,7 @@ function update(){
 }
 
 /* ───────────────── MEGCSÚSZÁS-ANIMÁCIÓ ───────────────── */
-let slideAng=0, slideRAF=0;
+let slideAng=0, slideRAF=0, searchRAF=0;
 
 /* ───────────────── HÚZÁS ───────────────── */
 let dragging=false;
@@ -619,28 +619,37 @@ bind.forEach(([id,key])=>{
 
 /* ───────────────── KRITIKUS KÖR KERESÉSE ───────────────── */
 $("findCrit").addEventListener('click',()=>{
-  const xc0=xCrest();
-  let best=null;
-  // rács a középpont és sugár körül; a kör menjen a rézsű fölé/mögé
-  for(let cx=xc0-S.H*0.6; cx<=S.H*0.4; cx+=S.H*0.12){
+  if(searchRAF)cancelAnimationFrame(searchRAF);
+  slideAng=0;
+  const xc0=xCrest(), ywSave=S.yw, save={xc:S.xc,yc:S.yc,R:S.R};
+  // próbakörök rácsa (középpont X/Y + sugár), a kör a rézsű fölé/mögé essen
+  const cands=[];
+  for(let cx=xc0-S.H*0.6; cx<=S.H*0.4; cx+=S.H*0.12)
     for(let cy=S.H*0.9; cy<=S.H*2.6; cy+=S.H*0.16){
-      // R: hogy a láb körül messen — a (cx,cy)-tól a lábig és a koronáig terjedő tartomány
-      const Rtoe=Math.hypot(cx-0,cy-0);
-      for(let R=Rtoe*0.85; R<=Rtoe*1.5; R+=S.H*0.18){
-        const save={xc:S.xc,yc:S.yc,R:S.R};
-        S.xc=cx;S.yc=cy;S.R=R;
-        const r=analyse();
-        if(r.valid&&r.Fb!==null&&isFinite(r.Fb)&&r.Fb>0.2){
-          if(!best||r.Fb<best.F){best={xc:cx,yc:cy,R,F:r.Fb};}
-        }
-        S.xc=save.xc;S.yc=save.yc;S.R=save.R;
-      }
+      const Rtoe=Math.hypot(cx,cy);
+      for(let R=Rtoe*0.85; R<=Rtoe*1.5; R+=S.H*0.18) cands.push({cx,cy,R});
     }
+  // minden jelöltre F kiértékelése + globális legkisebb (legkritikusabb) megkeresése
+  let best=null;
+  for(const c of cands){ S.xc=c.cx;S.yc=c.cy;S.R=c.R; const r=analyse();
+    if(r.valid&&r.Fb!=null&&isFinite(r.Fb)&&r.Fb>0.2){ c.F=r.Fb; if(!best||r.Fb<best.F) best={cx:c.cx,cy:c.cy,R:c.R,F:r.Fb}; } }
+  S.xc=save.xc;S.yc=save.yc;S.R=save.R;
+  const valid=cands.filter(c=>c.F!=null);
+  if(!best||!valid.length){ update(); return; }
+  // ANIMÁLT PÁSZTÁZÁS: végigvillantja a próbaköröket, mutatja az eddigi legkisebb F-et
+  const btn=$("findCrit"), oldTxt=btn.textContent; btn.disabled=true; btn.textContent='Keresés…';
+  let i=0, bestSoFar=null; const per=Math.max(1,Math.round(valid.length/70));
+  function frame(){
+    for(let k=0;k<per && i<valid.length;k++,i++){ const c=valid[i]; if(!bestSoFar||c.F<bestSoFar.F) bestSoFar=c; }
+    const cur=valid[Math.min(i,valid.length-1)];
+    S.xc=cur.cx;S.yc=cur.cy;S.R=cur.R; update();
+    $("statusBar").innerHTML='<div class="chip type-toe">🔍 Keresés… eddigi legkisebb <b>F = '+bestSoFar.F.toFixed(3)+'</b></div>'+$("statusBar").innerHTML;
+    if(i<valid.length){ searchRAF=requestAnimationFrame(frame); }
+    else { searchRAF=0; S.yw=ywSave;
+      S.xc=Math.round(best.cx*2)/2;S.yc=Math.round(best.cy*2)/2;S.R=Math.round(best.R*2)/2;
+      syncInputs(); update(); btn.disabled=false; btn.textContent=oldTxt; }
   }
-  if(best){
-    S.xc=Math.round(best.xc*2)/2;S.yc=Math.round(best.yc*2)/2;S.R=Math.round(best.R*2)/2;
-    syncInputs();update();
-  }
+  searchRAF=requestAnimationFrame(frame);
 });
 $("resetSim").addEventListener('click',()=>{slideAng=0;Object.assign(S,DEF);syncInputs();update();});
 
