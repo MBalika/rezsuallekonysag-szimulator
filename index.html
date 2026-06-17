@@ -394,14 +394,17 @@ function computeF(circle,n){
 
 /* ============ Kritikus kör keresése ============ */
 function searchCritical(){
-  // LÁBKÖRÖK: minden próbakör átmegy a lábponton (toeX,0); a csúszótömeg a koronától a lábig fut
+  // LÁBKÖRÖK: átmennek a lábponton (toeX,0) ÉS elnyelik a koronaélt (a korona a körön belül),
+  // így a csúszólap garantáltan a korona TETEJÉTŐL fut a lábig.
   var g=geom(), best=null, cands=[];
   var tx=g.toeX, ty=0;
-  for(var a=0;a<16;a++){
-    var xc=g.crestX - 0.30*g.run + 0.95*g.run*a/15;
+  for(var a=0;a<18;a++){
+    var xc=g.crestX - 0.45*g.run + g.run*a/17;
     for(var b=0;b<16;b++){
       var yc=g.H + g.run*(0.12 + 1.75*b/15);
       var R=Math.sqrt((xc-tx)*(xc-tx)+(yc-ty)*(yc-ty));
+      // a koronaél (crestX,H) legyen a körön BELÜL -> a csúszólap a koronától indul
+      if((g.crestX-xc)*(g.crestX-xc)+(yc-g.H)*(yc-g.H) >= R*R) continue;
       var r=computeF({xc:xc,yc:yc,R:R},12);
       if(!r||!isFinite(r.F)||r.F<=0.05||r.F>12) continue;
       var circle={xc:xc,yc:yc,R:R,F:r.F};
@@ -409,8 +412,8 @@ function searchCritical(){
       if(!best||r.F<best.F) best=circle;
     }
   }
-  if(!best){ // tartalék lábkör
-    var xc2=g.crestX+0.25*g.run, yc2=g.H+g.run*0.8, R2=Math.sqrt((xc2-tx)*(xc2-tx)+yc2*yc2);
+  if(!best){ // tartalék: koronát elnyelő lábkör
+    var xc2=g.crestX, yc2=g.H+g.run*0.9, R2=Math.sqrt((xc2-tx)*(xc2-tx)+yc2*yc2);
     best={xc:xc2,yc:yc2,R:R2};
   }
   return {best:best, cands:cands};
@@ -546,7 +549,7 @@ function draw(){
   // verzió-bélyeg (cache-ellenőrzéshez) — jól látható badge bal felül
   ctx.fillStyle='#C0512A'; ctx.fillRect(8,8,108,22);
   ctx.fillStyle='#ffffff'; ctx.font='bold 12px JetBrains Mono';
-  ctx.fillText('BUILD v10',18,23);
+  ctx.fillText('BUILD v11',18,23);
 }
 
 /* ============ UI frissítés ============ */
