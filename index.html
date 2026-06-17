@@ -260,9 +260,9 @@ footer{max-width:1040px;margin:3rem auto 0;padding:2rem 1.5rem 3rem;border-top:1
     </svg>
   </div>
   <div class="cards">
-    <div class="card"><h4><span class="dot toe"></span>Rézsűláb-kör (toe)</h4><p>A leggyakoribb. Meredek rézsűnél (β &gt; 53–60°) és nagyobb φ'-nél szinte mindig ez a kritikus.</p></div>
+    <div class="card"><h4><span class="dot toe"></span>Rézsűláb-kör (toe)</h4><p>A leggyakoribb. Meredek rézsűnél <span class="nowrap">(β &gt; 53–60°)</span> és nagyobb <span class="nowrap">φ'-nél</span> szinte mindig ez a kritikus.</p></div>
     <div class="card"><h4><span class="dot slope"></span>Rézsűkör (slope)</h4><p>Sekély, a felületen kilépő tömeg. Akkor jellemző, ha a láb alatt erősebb réteg van, vagy a felső réteg gyengébb.</p></div>
-    <div class="card"><h4><span class="dot base"></span>Talpkör (base)</h4><p>Mély csúszás vastag, gyenge altalajban (jellemzően φ ≈ 0 telített agyag). A kemény réteg az ívet alulról lekorlátozza.</p></div>
+    <div class="card"><h4><span class="dot base"></span>Talpkör (base)</h4><p>Mély csúszás vastag, gyenge altalajban (jellemzően <span class="nowrap">φ ≈ 0</span> telített agyag). A kemény réteg az ívet alulról lekorlátozza.</p></div>
   </div>
   <div class="note"><strong>Ezért keresünk sok kört:</strong> a kritikus csúszólapot nem lehet előre kitalálni. A program (vagy a kézi számítás) sok próbakört végigfuttat — eltérő középponttal és sugárral —, és a <strong>legkisebb biztonsági tényezőjűt</strong> választja. Pont ezt teszi lent a "Kritikus kör keresése" gomb.</div>
 </section>
@@ -746,28 +746,35 @@ h1,h2,h3,h4,.quiz-q,.panel-title{text-wrap:balance}
 </style>
 
 <script>
-/* Magyar tipográfia — automatikus sortörés-szabályok (SVG és scriptek kihagyva) */
+/* Magyar tipográfia — automatikus sortörés-szabályok (csak \u escape-ek, robusztus) */
 (function(){
   "use strict";
-  var NBSP=' ', WJ='⁠';
-  function math(s){ return s.replace(/ (?=[=+−·×<>≈≥≤≠\/])/g,NBSP).replace(/([=+−·×<>≈≥≤≠\/]) /g,'$1'+NBSP); }
-  function units(s){ return s.replace(/(\d) (?=(?:kPa|MPa|GPa|kN\/m³|kN\/m²|kN|m³|m²|m\/s|cm|mm|km|kg|°C|°|%|m|t|óra|nap|hét|hónap|év)(?:[\s.,;:!?)\]–—]|$))/g,'$1'+NBSP); }
-  function shortWords(s){ return s.replace(/(^|[\s(„"'»–—])(a|az|s|e|é|és|is)(?: )(?=\S)/gi,'$1$2'+NBSP); }
-  function dashes(s){ return s.replace(/([0-9A-Za-zÀ-ÿ])([-–—])([0-9A-Za-zÀ-ÿ])/g,'$1'+WJ+'$2'+WJ+'$3'); }
-  function sentenceStart(s){ return s.replace(/([.!?…][)"'»”’]?\s+\S+) (?=\S)/g,'$1'+NBSP); }
-  function fix(s){ return dashes(units(math(shortWords(sentenceStart(s))))); }
+  var NBSP=' ', WJ='⁠';
+  function fix(s){
+    s=s.replace(/([.!?…][)"'»”’]?\s+\S+) (?=\S)/g,'$1'+NBSP);
+    s=s.replace(/(^|[\s(„"'«»–—])(a|az|s|e|é|és|is) (?=\S)/gi,'$1$2'+NBSP);
+    s=s.replace(/ (?=[=+−·×<>≈≥≤≠\/])/g,NBSP);
+    s=s.replace(/([=+−·×<>≈≥≤≠\/]) /g,'$1'+NBSP);
+    s=s.replace(/(\d) (?=(?:kPa|MPa|kN\/m³|kN\/m²|kN|m³|m²|cm|mm|km|kg|°C|°|%|m|év)(?:[\s.,;:!?)\]–—]|$))/g,'$1'+NBSP);
+    s=s.replace(/([0-9A-Za-zÀ-ſ])([\-–—])([0-9A-Za-zÀ-ſ])/g,'$1'+WJ+'$2'+WJ+'$3');
+    return s;
+  }
   var SKIP={SCRIPT:1,STYLE:1,CODE:1,PRE:1,KBD:1,SAMP:1,INPUT:1,TEXTAREA:1,SELECT:1,OPTION:1,NOSCRIPT:1};
   function walk(el){
+    if(!el)return;
     for(var n=el.firstChild;n;n=n.nextSibling){
-      if(n.nodeType===3){ var t=n.nodeValue; if(t && /\S/.test(t)){ var nt=fix(t); if(nt!==t) n.nodeValue=nt; } }
-      else if(n.nodeType===1){ var tag=n.tagName?n.tagName.toUpperCase():''; if(SKIP[tag]) continue;
-        if(n.namespaceURI==='http://www.w3.org/2000/svg') continue;
-        if(n.classList && n.classList.contains('nowrap')) continue;
-        if(n.isContentEditable) continue; walk(n); }
+      if(n.nodeType===3){ var t=n.nodeValue; if(t&&/\S/.test(t)){ var nt=fix(t); if(nt!==t)n.nodeValue=nt; } }
+      else if(n.nodeType===1){ var tag=n.tagName?n.tagName.toUpperCase():''; if(SKIP[tag])continue;
+        if(n.namespaceURI==='http://www.w3.org/2000/svg')continue;
+        if(n.classList&&n.classList.contains('nowrap'))continue;
+        walk(n); }
     }
   }
-  function run(){ if(document.body) walk(document.body); }
+  window.__typo=walk;
+  function run(){ walk(document.body); }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',run); else run();
+  /* a kvíz dinamikusan cserélődő kérdéseire is fusson */
+  setInterval(function(){ ['qText','qOpts','qExpl'].forEach(function(id){var el=document.getElementById(id); if(el)walk(el);}); },400);
 })();
 </script>
 </body>
