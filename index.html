@@ -105,6 +105,11 @@ button.act.ghost:hover{background:var(--concrete-lt)}
 .toggles{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
 .toggles label{display:inline-flex;align-items:center;gap:5px;font-size:0.8rem;background:#fff;border:1px solid var(--line-strong);padding:4px 9px;border-radius:99px;cursor:pointer}
 .toggles input{accent-color:var(--rebar)}
+.grp{background:#fff;border:1px solid var(--line-strong);border-left:4px solid var(--steel);border-radius:10px;padding:11px 13px;margin:0 0 14px}
+.grp-h{font-weight:700;font-size:0.9rem;color:var(--steel-dk);display:flex;align-items:center;gap:8px;margin-bottom:2px}
+.grp-tag{background:var(--gold);color:#3A2A1A;font-size:0.62rem;font-weight:700;letter-spacing:0.04em;padding:2px 7px;border-radius:99px;white-space:nowrap}
+.grp-sub{font-size:0.74rem;color:var(--ink-mute);margin-bottom:9px;font-family:'JetBrains Mono'}
+.grp .ctrl:last-child{margin-bottom:0}
 
 /* F gauge + readout */
 .fbar{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center;background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:14px 18px;margin:0 0 4px}
@@ -168,7 +173,7 @@ button.act.ghost:hover{background:var(--concrete-lt)}
 <div class="chapter-page active" id="page-bev">
   <div class="hero">
     <h1>Mikor csúszik meg a&nbsp;domboldal?</h1>
-    <p class="subtitle">Rézsűállékonyság a&nbsp;lamellás (Fellenius) módszerrel — élő biztonsági tényezővel, kritikus csúszólap-kereséssel, és&nbsp;azzal a&nbsp;csúszkával, amitől a&nbsp;legtöbb rézsű tönkremegy: az&nbsp;<b>esővel</b> és&nbsp;a&nbsp;talajvízzel.</p>
+    <p class="subtitle">Rézsűállékonyság a&nbsp;lamellás (Fellenius) módszerrel — élő biztonsági tényezővel és&nbsp;kritikus csúszólap-kereséssel. A&nbsp;talaj <b>nyírószilárdsági paramétereiből</b> (c′, φ′) és&nbsp;a&nbsp;geometriából számolva: meddig áll meg a&nbsp;domboldal?</p>
     <div class="meta">
       <span><b>Tárgy</b> Geotechnika · Alapozás BSc</span>
       <span><b>Módszer</b> körös csúszólap, lamellák</span>
@@ -185,8 +190,8 @@ button.act.ghost:hover{background:var(--concrete-lt)}
       <div class="callout warn" style="margin:6px 0;background:linear-gradient(180deg,#FBF6E6,#F6EECF);border-left-color:var(--gold)"><b style="color:#9A6A12">1,0 ≤ F &lt; 1,5</b> — áll, de&nbsp;nincs tartaléka. Kockázatos.</div>
       <div class="callout warn" style="margin:6px 0"><b>F &lt; 1,0</b> — a&nbsp;megcsúsztató erő legyőzi a&nbsp;szilárdságot: <b>megcsúszik</b>.</div>
     </div>
-    <div class="callout water"><b>A víz a&nbsp;főszereplő.</b> Az&nbsp;eső és&nbsp;a&nbsp;talajvíz a&nbsp;talaj <b>pórusaiba</b> kerül, ahol <span class="inline-math">u</span> pórusvíznyomást kelt. Ez&nbsp;csökkenti az&nbsp;<b>effektív feszültséget</b> a&nbsp;csúszólapon (σ′ = σ − u), így&nbsp;a&nbsp;súrlódásból származó ellenállás <b>lecsökken</b> — a&nbsp;legtöbb valós rézsűcsúszás heves esőzés után történik. Ezt a&nbsp;szimulátorban a&nbsp;saját szemeddel láthatod.</div>
-    <p>Lépj a&nbsp;<b>Szimulátor</b> fülre, és&nbsp;told fel az&nbsp;eső-csúszkát egy meredek rézsűn — figyeld, ahogy az&nbsp;F&nbsp;1,0 alá esik, és&nbsp;a&nbsp;domboldal megindul.</p>
+    <div class="callout note"><b>A nyírószilárdság az&nbsp;alapadat.</b> A&nbsp;talaj a&nbsp;csúszólap mentén a&nbsp;<b>nyírószilárdságával</b> áll ellen, amit a&nbsp;Mohr–Coulomb-törvény ad meg: <span class="nowrap">τ<sub>f</sub> = c′ + σ′·tanφ′</span>. A&nbsp;két paraméter — a&nbsp;<b>kohézió</b> (c′) és&nbsp;a&nbsp;<b>belső súrlódási szög</b> (φ′) — a&nbsp;talaj alapvető jellemzője; a&nbsp;szimulátorban külön, kiemelt csúszkán állítható, mert <b>tőlük függ minden</b>.</div>
+    <p>Lépj a&nbsp;<b>Szimulátor</b> fülre, és&nbsp;állítsd a&nbsp;c′ és&nbsp;φ′ értékét egy meredek rézsűn — figyeld, ahogy az&nbsp;F&nbsp;1,0 alá esik, és&nbsp;a&nbsp;domboldal megindul.</p>
   </div>
 </div>
 
@@ -197,12 +202,12 @@ button.act.ghost:hover{background:var(--concrete-lt)}
     <p>A&nbsp;valódi csúszólap körívvel jól közelíthető. A&nbsp;csúszólap fölötti talajtömeget függőleges <b>lamellákra</b> (szeletekre) bontjuk, és&nbsp;minden lamellára felírjuk az&nbsp;egyensúlyt. A&nbsp;lamella súlya <span class="nowrap">W = γ·h·b</span> két részre bomlik a&nbsp;csúszólap mentén:</p>
     <ul class="bullet">
       <li><b>Megcsúsztató komponens</b> (a&nbsp;lejtő felé): <span class="inline-math">W·sinα</span> — ez „hajtja" a&nbsp;csúszást.</li>
-      <li><b>Normális komponens</b> (a&nbsp;lapra merőleges): <span class="inline-math">W·cosα</span> — ez&nbsp;hozza létre a&nbsp;súrlódást, de&nbsp;a&nbsp;pórusvíznyomás <span class="inline-math">u</span> ebből levonódik.</li>
+      <li><b>Normális komponens</b> (a&nbsp;lapra merőleges): <span class="inline-math">W·cosα</span> — ez&nbsp;hozza létre a&nbsp;súrlódási ellenállást a&nbsp;<span class="inline-math">tanφ′</span> révén.</li>
     </ul>
-    <p>Itt&nbsp;<span class="inline-math">α</span> az&nbsp;adott lamella talpának vízszinteshez mért dőlése, <span class="inline-math">l = b/cosα</span> a&nbsp;talp hossza. A&nbsp;teljes biztonsági tényező (Fellenius / svéd kör):</p>
-    <div class="callout formula" style="font-size:1.02rem">F = Σ[ c′·l + (W·cosα − u·l)·tanφ′ ] / Σ[ W·sinα ]</div>
+    <p>Itt&nbsp;<span class="inline-math">α</span> az&nbsp;adott lamella talpának vízszinteshez mért dőlése, <span class="inline-math">l = b/cosα</span> a&nbsp;talp hossza. A&nbsp;teljes biztonsági tényező (Fellenius / svéd kör, száraz rézsűre):</p>
+    <div class="callout formula" style="font-size:1.02rem">F = Σ[ c′·l + W·cosα·tanφ′ ] / Σ[ W·sinα ]</div>
     <div class="grid c2">
-      <div class="callout success" style="margin:8px 0"><b>Számláló — megtartó.</b> A&nbsp;<b>kohézió</b> (c′·l) és&nbsp;a&nbsp;<b>súrlódás</b> ((N − u·l)·tanφ′) a&nbsp;csúszólap mentén. A&nbsp;víz <span class="inline-math">u·l</span> tagja csökkenti.</div>
+      <div class="callout success" style="margin:8px 0"><b>Számláló — megtartó.</b> A&nbsp;<b>nyírószilárdság</b> a&nbsp;csúszólap mentén: a&nbsp;<b>kohézió</b> (c′·l) és&nbsp;a&nbsp;<b>súrlódás</b> (N·tanφ′). Ezt a&nbsp;két talajparaméter, a&nbsp;<b>c′ és&nbsp;φ′</b> szabja meg.</div>
       <div class="callout warn" style="margin:8px 0"><b>Nevező — megcsúsztató.</b> A&nbsp;lamellák súlyának lejtőirányú összetevője, <span class="inline-math">Σ W·sinα</span>.</div>
     </div>
   </div>
@@ -248,19 +253,21 @@ button.act.ghost:hover{background:var(--concrete-lt)}
         <canvas id="cv" width="760" height="430"></canvas>
         <div class="legend">
           <span><i style="background:#C8B79C"></i>talaj</span>
-          <span><i style="background:#2E7D8A"></i>talajvíz</span>
           <span><i style="background:#C0512A"></i>csúszólap / megcsúsztató</span>
           <span><i style="background:#5C7A52"></i>megtartó (ellenállás)</span>
           <span><i style="background:#3A2A1A"></i>lamellák</span>
         </div>
       </div>
       <div class="sim-controls">
+        <div class="grp">
+          <div class="grp-h">Nyírószilárdsági paraméterek <span class="grp-tag">alapadat</span></div>
+          <div class="grp-sub">τ<sub>f</sub> = c′ + σ′·tanφ′ — ezek adják a&nbsp;megtartó erőt.</div>
+          <div class="ctrl"><label>Kohézió&nbsp;c′ <span class="v"><span id="vC">8</span> kPa</span></label><input type="range" id="sC" min="0" max="40" step="1" value="8"></div>
+          <div class="ctrl"><label>Belső&nbsp;súrlódási&nbsp;szög&nbsp;φ′ <span class="v"><span id="vP">26</span>°</span></label><input type="range" id="sP" min="5" max="42" step="1" value="26"></div>
+        </div>
         <div class="ctrl"><label>Rézsűmagasság&nbsp;H <span class="v"><span id="vH">10</span> m</span></label><input type="range" id="sH" min="4" max="18" step="0.5" value="10"></div>
         <div class="ctrl"><label>Rézsűszög&nbsp;β <span class="v"><span id="vB">32</span>°</span></label><input type="range" id="sB" min="15" max="60" step="1" value="32"></div>
-        <div class="ctrl"><label>Kohézió&nbsp;c′ <span class="v"><span id="vC">8</span> kPa</span></label><input type="range" id="sC" min="0" max="40" step="1" value="8"></div>
-        <div class="ctrl"><label>Belső&nbsp;súrlódási&nbsp;szög&nbsp;φ′ <span class="v"><span id="vP">26</span>°</span></label><input type="range" id="sP" min="5" max="42" step="1" value="26"></div>
         <div class="ctrl"><label>Térfogatsúly&nbsp;γ <span class="v"><span id="vG">19</span> kN/m³</span></label><input type="range" id="sG" min="15" max="22" step="0.5" value="19"></div>
-        <div class="ctrl"><label style="color:var(--azure-dk)">☔ Eső / talajvízszint <span class="v" id="vW" style="color:var(--azure-dk)">30%</span></label><input class="water" type="range" id="sW" min="0" max="100" step="1" value="30"></div>
         <div class="ctrl"><label>Lamellák száma <span class="v"><span id="vN">12</span></span></label><input type="range" id="sN" min="4" max="30" step="1" value="12"></div>
         <div class="btnrow">
           <button class="act rebar" id="btnSearch">🔍 Kritikus csúszólap</button>
@@ -295,9 +302,9 @@ button.act.ghost:hover{background:var(--concrete-lt)}
   <div class="panel">
     <h3 style="margin-top:0">Amit érdemes megfigyelni</h3>
     <ul class="bullet">
-      <li><b>Eső-csúszka:</b> a&nbsp;talajvíz emelkedésével az&nbsp;<span class="inline-math">u·l·tanφ′</span> tag nő, a&nbsp;súrlódási ellenállás csökken — az&nbsp;F&nbsp;meredeken esik. Sok rézsű csak <b>esőben</b> bukik meg.</li>
+      <li><b>Nyírószilárdság (c′, φ′):</b> ez&nbsp;az&nbsp;alapadat — minél nagyobb, annál nagyobb a&nbsp;megtartó erő, és&nbsp;annál nagyobb az&nbsp;F. Próbáld nullára venni a&nbsp;c′-t, vagy lecsökkenteni a&nbsp;φ′-t.</li>
       <li><b>Rézsűszög:</b> meredekebb β&nbsp;→ nagyobb <span class="inline-math">W·sinα</span> → kisebb F. A&nbsp;bevágásoknál ez&nbsp;a&nbsp;fő tervezési korlát.</li>
-      <li><b>Kohézió vs. súrlódás:</b> kohézió nélküli (c′ = 0) talajnál a&nbsp;víz hatása drámai; nagy&nbsp;c′ „összetartja" a&nbsp;rézsűt akkor is, ha&nbsp;φ′ kicsi.</li>
+      <li><b>Kohézió vs. súrlódás:</b> a&nbsp;<b>kohézió</b> (c′) meredeken is „összetartja" a&nbsp;rézsűt; tiszta szemcsés talajnál (c′ = 0) viszont csak a&nbsp;<b>súrlódás</b> (φ′) tart, és&nbsp;a&nbsp;<span class="nowrap">F = tanφ′/tanβ</span> közelítés érvényes.</li>
     </ul>
   </div>
 </div>
@@ -310,7 +317,7 @@ button.act.ghost:hover{background:var(--concrete-lt)}
 
 <div class="foot">
   Rézsűállékonyság-szimulátor · <b>BME Építőmérnöki Kar</b> · Geotechnika · oktatási segédanyag —
-  a&nbsp;Fellenius-féle lamellás módszer szemléltetésére. A&nbsp;modell egyszerűsített (körös csúszólap, hidrosztatikus pórusnyomás); valós tervezéshez EC7&nbsp;és&nbsp;részletes talajvizsgálat kell.
+  a&nbsp;Fellenius-féle lamellás módszer szemléltetésére. A&nbsp;modell egyszerűsített (körös csúszólap, száraz rézsű, pórusvíznyomás nélkül); valós tervezéshez EC7&nbsp;és&nbsp;részletes talajvizsgálat kell.
 </div>
 
 </main>
@@ -330,7 +337,7 @@ document.querySelectorAll('#chTabs button').forEach(function(b){
 
 /* ============ Állapot ============ */
 var GW=9.81;
-var st={H:10,beta:32,c:8,phi:26,gamma:19,rain:30,n:12,
+var st={H:10,beta:32,c:8,phi:26,gamma:19,n:12,
         circle:null, showForces:false, showSlices:true, slideT:0, sliding:false};
 
 /* Geometria (méter) */
@@ -344,13 +351,11 @@ function ground(x){ var g=geom();
   if(x>=g.toeX) return 0;
   return g.H*(g.toeX-x)/(g.toeX-g.crestX);
 }
-/* Talajvízszint magassága a rain alapján (0..H) */
-function waterY(){ return st.rain/100*st.H*0.96; }
 
 /* ============ Fellenius F ============ */
 function computeF(circle,n){
   if(!circle) return null;
-  var xc=circle.xc, yc=circle.yc, R=circle.R, g=geom(), yw=waterY();
+  var xc=circle.xc, yc=circle.yc, R=circle.R, g=geom();
   // a csúszótömeg x-tartománya: ahol az alsó ív a felszín alatt van
   var x0=Math.max(0,xc-R), x1=Math.min(g.end,xc+R);
   if(x1-x0<=0.3) return null;
@@ -372,15 +377,11 @@ function computeF(circle,n){
     var alpha=Math.asin(sin), cos=Math.cos(alpha);
     var l=b/cos;
     var W=st.gamma*h*b;
-    var wlev=Math.min(yw,top);
-    var hw=Math.max(0,wlev-yb);
-    var u=GW*hw;
     var N=W*cos;
-    var eff=N-u*l; if(eff<0)eff=0;
-    var resist=st.c*l + eff*Math.tan(st.phi*Math.PI/180);
+    var resist=st.c*l + N*Math.tan(st.phi*Math.PI/180);
     var drive=W*sin;
     num+=resist; den+=drive;
-    rows.push({i:i+1,xm:xm,h:h,alpha:alpha*180/Math.PI,W:W,u:u,resist:resist,drive:drive});
+    rows.push({i:i+1,xm:xm,h:h,alpha:alpha*180/Math.PI,W:W,resist:resist,drive:drive});
   }
   if(den<=0.01) return {F:9.99,num:num,den:den,rows:rows,lo:lo,hi:hi};
   return {F:num/den,num:num,den:den,rows:rows,lo:lo,hi:hi};
@@ -415,17 +416,18 @@ function resize(){
 function fitView(){
   var g=geom();
   var wx0=-1, wx1=g.end+1, wy0=-(st.H*0.55), wy1=st.H*1.35;
+  // a nézet alja érje el a csúszókör legmélyebb pontját, hogy a teljes csúszólap látszódjon
+  if(st.circle){ var cb=st.circle.yc-st.circle.R-0.6; if(cb<wy0) wy0=cb; }
   var cw=cv.width/2, ch=cv.height/2, pad=14;
   var sx=(cw-2*pad)/(wx1-wx0), sy=(ch-2*pad)/(wy1-wy0);
   VIEW.s=Math.min(sx,sy);
   VIEW.ox=pad - wx0*VIEW.s + (cw-2*pad-(wx1-wx0)*VIEW.s)/2;
   VIEW.oy=ch-pad + wy0*VIEW.s; // flip
+  VIEW.wy0=wy0;
 }
 function X(x){return VIEW.ox + x*VIEW.s;}
 function Y(y){return VIEW.oy - y*VIEW.s;}
 
-var rainDrops=[];
-for(var i=0;i<90;i++) rainDrops.push({x:Math.random(),y:Math.random(),sp:0.4+Math.random()*0.6});
 
 function draw(){
   var g=geom(), cw=cv.width/2, ch=cv.height/2;
@@ -439,7 +441,7 @@ function draw(){
   for(var gy=-st.H;gy<=st.H*1.3;gy+=2){ctx.beginPath();ctx.moveTo(0,Y(gy));ctx.lineTo(cw,Y(gy));ctx.stroke();}
 
   // talaj poligon
-  var soilBottom=-(st.H*0.5);
+  var soilBottom=(VIEW.wy0!==undefined?VIEW.wy0:-(st.H*0.5));
   ctx.beginPath();
   ctx.moveTo(X(-1),Y(ground(-1)));
   for(var x=-1;x<=g.end;x+=0.5) ctx.lineTo(X(x),Y(ground(x)));
@@ -449,21 +451,6 @@ function draw(){
   ctx.fillStyle=soilg; ctx.fill();
   ctx.strokeStyle='#8F7A55'; ctx.lineWidth=1.6; ctx.stroke();
 
-  // talajvíz (kék terület a felszín és a vízszint min-je alatt)
-  var yw=waterY();
-  if(yw>0.05){
-    ctx.beginPath(); var started=false;
-    for(var x2=-1;x2<=g.end;x2+=0.5){ var wl=Math.min(yw,ground(x2));
-      if(!started){ctx.moveTo(X(x2),Y(wl));started=true;} else ctx.lineTo(X(x2),Y(wl)); }
-    ctx.lineTo(X(g.end),Y(soilBottom)); ctx.lineTo(X(-1),Y(soilBottom)); ctx.closePath();
-    ctx.fillStyle='rgba(46,125,138,0.30)'; ctx.fill();
-    // vízszint vonal
-    ctx.beginPath(); started=false;
-    for(var x3=-1;x3<=g.end;x3+=0.5){ var wl3=Math.min(yw,ground(x3));
-      if(!started){ctx.moveTo(X(x3),Y(wl3));started=true;} else ctx.lineTo(X(x3),Y(wl3)); }
-    ctx.strokeStyle='#1F5560'; ctx.lineWidth=1.6; ctx.setLineDash([6,4]); ctx.stroke(); ctx.setLineDash([]);
-  }
-
   var r=st.circle?computeF(st.circle,st.n):null;
 
   // csúszótömeg + lamellák + csúszólap
@@ -472,9 +459,9 @@ function draw(){
     // sliding offset (forgatás C körül)
     function rot(px,py){
       if(!st.sliding) return [px,py];
-      var th=st.slideT*0.28; // rad
+      var th=st.slideT*0.30; // rad — a csúszás iránya: a lejtőn lefelé (a középpont alatt forgó tömeg)
       var dx=px-c.xc, dy=py-c.yc;
-      return [c.xc+dx*Math.cos(th)+dy*Math.sin(th), c.yc-dx*Math.sin(th)+dy*Math.cos(th)];
+      return [c.xc+dx*Math.cos(th)-dy*Math.sin(th), c.yc+dx*Math.sin(th)+dy*Math.cos(th)];
     }
     // a megcsúszott tömeg (ha sliding) — halvány "heg" a helyén
     if(st.sliding){
@@ -531,14 +518,6 @@ function draw(){
   for(var xg=-1;xg<=g.end;xg+=0.5) ctx.lineTo(X(xg),Y(ground(xg)));
   ctx.strokeStyle='#6E5B3E'; ctx.lineWidth=1.8; ctx.stroke();
 
-  // eső
-  if(st.rain>5){
-    ctx.strokeStyle='rgba(46,125,138,'+(0.15+st.rain/100*0.5)+')'; ctx.lineWidth=1.3;
-    var dens=Math.floor(st.rain/100*rainDrops.length);
-    for(var d=0;d<dens;d++){var dp=rainDrops[d];var px=dp.x*cw, py=((dp.y+performance.now()/1000*dp.sp)%1)*ch*0.7;
-      ctx.beginPath();ctx.moveTo(px,py);ctx.lineTo(px-3,py+11);ctx.stroke();}
-  }
-
   // tengelyfeliratok
   ctx.fillStyle='#6B6052'; ctx.font='11px JetBrains Mono';
   ctx.fillText('H = '+st.H.toFixed(1)+' m', X(g.crestX)-58, Y(st.H/2));
@@ -554,9 +533,9 @@ function setVerdict(F){
   // tű: F 0..2.5 → szög -90..+90°
   var ang=Math.max(-90,Math.min(90,(Math.min(F,2.5)/2.5)*180-90));
   nd.setAttribute('transform','rotate('+ang+' 75 86)');
-  if(F<1.0){ v.className='fverdict fail'; n.innerHTML='<b>Megcsúszik!</b> A&nbsp;megcsúsztató erő legyőzi a&nbsp;szilárdságot. Nyomd meg a&nbsp;„Megcsúszás" gombot.'; hint.innerHTML='💥 <b>F &lt; 1,0:</b> instabil. Csökkentsd a&nbsp;rézsűszöget, javítsd a&nbsp;víztelenítést (alacsonyabb talajvíz), vagy növeld a&nbsp;szilárdságot.'; }
-  else if(F<1.5){ v.className='fverdict edge'; n.innerHTML='Áll, de&nbsp;nincs biztonsági tartaléka — a&nbsp;tervezési követelmény jellemzően <b>F ≥ 1,5</b>.'; hint.innerHTML='⚠️ <b>1,0 ≤ F &lt; 1,5:</b> határeset. Egy&nbsp;heves eső átbillentheti — told fel az&nbsp;eső-csúszkát, és&nbsp;nézd!'; }
-  else { v.className='fverdict ok'; n.innerHTML='<b>Stabil.</b> Megvan az&nbsp;1,5-es tartalék a&nbsp;tartós állapotra.'; hint.innerHTML='✅ <b>F ≥ 1,5:</b> stabil rézsű. Próbáld meredekebbre venni&nbsp;(β), vagy esőztesd meg — meddig bírja?'; }
+  if(F<1.0){ v.className='fverdict fail'; n.innerHTML='<b>Megcsúszik!</b> A&nbsp;megcsúsztató erő legyőzi a&nbsp;nyírószilárdságot. Nyomd meg a&nbsp;„Megcsúszás" gombot.'; hint.innerHTML='💥 <b>F &lt; 1,0:</b> instabil. Csökkentsd a&nbsp;rézsűszöget&nbsp;(β), vagy nagyobb nyírószilárdságú talaj kell (nagyobb c′ vagy φ′).'; }
+  else if(F<1.5){ v.className='fverdict edge'; n.innerHTML='Áll, de&nbsp;nincs biztonsági tartaléka — a&nbsp;tervezési követelmény jellemzően <b>F ≥ 1,5</b>.'; hint.innerHTML='⚠️ <b>1,0 ≤ F &lt; 1,5:</b> határeset. Vegyél vissza a&nbsp;rézsűszögből, vagy nézd meg, mennyi c′/φ′ kell az&nbsp;1,5-höz.'; }
+  else { v.className='fverdict ok'; n.innerHTML='<b>Stabil.</b> Megvan az&nbsp;1,5-es tartalék a&nbsp;tartós állapotra.'; hint.innerHTML='✅ <b>F ≥ 1,5:</b> stabil rézsű. Próbáld meredekebbre venni&nbsp;(β), vagy gyengébb talajt&nbsp;(kisebb c′, φ′) — meddig bírja?'; }
 }
 function updateFormula(r){
   var f=document.getElementById('fformula');
@@ -566,15 +545,16 @@ function updateFormula(r){
 }
 function updateTable(r){
   var t=document.getElementById('sltable'); if(!r){t.innerHTML='';return;}
-  var h='<tr><th>#</th><th>h&nbsp;(m)</th><th>α&nbsp;(°)</th><th>W&nbsp;(kN)</th><th>u&nbsp;(kPa)</th><th>megtartó</th><th>megcsúszt.</th></tr>';
-  r.rows.forEach(function(row){h+='<tr><td>'+row.i+'</td><td>'+row.h.toFixed(2)+'</td><td>'+row.alpha.toFixed(1)+'</td><td>'+row.W.toFixed(0)+'</td><td>'+row.u.toFixed(0)+'</td><td style="color:#3E5A1F">'+row.resist.toFixed(1)+'</td><td style="color:#8F3A1B">'+row.drive.toFixed(1)+'</td></tr>';});
-  h+='<tr class="tot"><td colspan="5">Σ</td><td style="color:#3E5A1F">'+r.num.toFixed(0)+'</td><td style="color:#8F3A1B">'+r.den.toFixed(0)+'</td></tr>';
+  var h='<tr><th>#</th><th>h&nbsp;(m)</th><th>α&nbsp;(°)</th><th>W&nbsp;(kN)</th><th>megtartó</th><th>megcsúszt.</th></tr>';
+  r.rows.forEach(function(row){h+='<tr><td>'+row.i+'</td><td>'+row.h.toFixed(2)+'</td><td>'+row.alpha.toFixed(1)+'</td><td>'+row.W.toFixed(0)+'</td><td style="color:#3E5A1F">'+row.resist.toFixed(1)+'</td><td style="color:#8F3A1B">'+row.drive.toFixed(1)+'</td></tr>';});
+  h+='<tr class="tot"><td colspan="4">Σ</td><td style="color:#3E5A1F">'+r.num.toFixed(0)+'</td><td style="color:#8F3A1B">'+r.den.toFixed(0)+'</td></tr>';
   t.innerHTML=h;
 }
 function recompute(){
   if(!st.circle){ var s=searchCritical(); st.circle=s.best; }
   var r=st.circle?computeF(st.circle,st.n):null;
   setVerdict(r?r.F:null); updateFormula(r); updateTable(r);
+  if(!st.sliding) fitView();
   draw();
 }
 
@@ -590,10 +570,6 @@ function bind(id,key,label,unit,fmt){
 }
 bind('sH','H','vH','m'); bind('sB','beta','vB','°'); bind('sC','c','vC','kPa');
 bind('sP','phi','vP','°'); bind('sG','gamma','vG','kN/m³'); bind('sN','n','vN');
-document.getElementById('sW').addEventListener('input',function(){
-  st.rain=parseFloat(this.value); document.getElementById('vW').textContent=this.value+'%';
-  st.sliding=false; st.slideT=0; recompute();
-});
 document.getElementById('sN').addEventListener('input',function(){ st.n=parseInt(this.value); document.getElementById('vN').textContent=this.value; recompute(); });
 
 document.getElementById('tgForces').addEventListener('change',function(){st.showForces=this.checked;draw();});
@@ -653,13 +629,12 @@ document.getElementById('btnSlide').addEventListener('click',function(){
 });
 
 document.getElementById('btnReset').addEventListener('click',function(){
-  st={H:10,beta:32,c:8,phi:26,gamma:19,rain:30,n:12,circle:null,showForces:document.getElementById('tgForces').checked,showSlices:document.getElementById('tgSlices').checked,slideT:0,sliding:false};
+  st={H:10,beta:32,c:8,phi:26,gamma:19,n:12,circle:null,showForces:document.getElementById('tgForces').checked,showSlices:document.getElementById('tgSlices').checked,slideT:0,sliding:false};
   document.getElementById('sH').value=10;document.getElementById('vH').textContent='10';
   document.getElementById('sB').value=32;document.getElementById('vB').textContent='32';
   document.getElementById('sC').value=8;document.getElementById('vC').textContent='8';
   document.getElementById('sP').value=26;document.getElementById('vP').textContent='26';
   document.getElementById('sG').value=19;document.getElementById('vG').textContent='19';
-  document.getElementById('sW').value=30;document.getElementById('vW').textContent='30%';
   document.getElementById('sN').value=12;document.getElementById('vN').textContent='12';
   fitView(); recompute();
 });
@@ -679,12 +654,12 @@ function moveCenter(ev){
 
 /* ============ Forgatókönyvek ============ */
 var scns=[
- {t:'Száraz, lankás',d:'β 20°, jó talaj, nincs víz — biztosan stabil.',v:{H:9,beta:20,c:10,phi:32,gamma:19,rain:0}},
- {t:'Heves eső',d:'Ugyanaz a rézsű, de a talajvíz a felszínig telik.',v:{H:9,beta:30,c:8,phi:26,gamma:19,rain:95}},
- {t:'Meredek bevágás',d:'β 50° — a súly lejtőirányú komponense megnő.',v:{H:11,beta:50,c:6,phi:24,gamma:20,rain:35}},
- {t:'Gyenge agyag',d:'Kis c′ és kis φ′ — a klasszikus problémás talaj.',v:{H:8,beta:28,c:5,phi:12,gamma:18,rain:50}},
- {t:'Tankönyvi határeset',d:'Beállítva F ≈ 1,0 köré — billeg.',v:{H:10,beta:38,c:7,phi:22,gamma:19,rain:60}},
- {t:'Jól víztelenített',d:'Meredek, de száraz és kohéziós — megtartja.',v:{H:12,beta:45,c:22,phi:30,gamma:20,rain:5}}
+ {t:'Lankás, jó talaj',d:'β 20°, erős nyírószilárdság — bőven stabil.',v:{H:9,beta:20,c:10,phi:32,gamma:19}},
+ {t:'Gyenge agyag',d:'Kis c′ és kis φ′ — a klasszikus problémás talaj.',v:{H:8,beta:28,c:5,phi:12,gamma:18}},
+ {t:'Súrlódó homok (c′ = 0)',d:'Kohézió nélkül a φ′ és β viszonya dönt.',v:{H:8,beta:30,c:0,phi:34,gamma:18}},
+ {t:'Erős, kohéziós talaj',d:'Nagy c′ — meredeken is megtartja magát.',v:{H:12,beta:45,c:25,phi:30,gamma:20}},
+ {t:'Meredek bevágás',d:'β 52° — a súly lejtőirányú komponense megnő.',v:{H:11,beta:52,c:8,phi:26,gamma:20}},
+ {t:'Tankönyvi határeset',d:'F ≈ 1,0 köré állítva — épp billeg.',v:{H:10,beta:40,c:6,phi:22,gamma:19}}
 ];
 var sg=document.getElementById('scnGrid');
 scns.forEach(function(s){var b=document.createElement('button');b.innerHTML='<span class="t">'+s.t+'</span><span class="d">'+s.d+'</span>';
@@ -695,7 +670,6 @@ scns.forEach(function(s){var b=document.createElement('button');b.innerHTML='<sp
     document.getElementById('sC').value=s.v.c;document.getElementById('vC').textContent=s.v.c;
     document.getElementById('sP').value=s.v.phi;document.getElementById('vP').textContent=s.v.phi;
     document.getElementById('sG').value=s.v.gamma;document.getElementById('vG').textContent=s.v.gamma;
-    document.getElementById('sW').value=s.v.rain;document.getElementById('vW').textContent=s.v.rain+'%';
     // váltás a szimulátorra
     document.querySelectorAll('#chTabs button').forEach(x=>x.classList.remove('active'));
     document.querySelectorAll('.chapter-page').forEach(x=>x.classList.remove('active'));
@@ -710,9 +684,9 @@ var quiz=[
  {q:'Mit fejez ki a biztonsági tényező (F) a rézsűállékonyságban?',
   o:['A megtartó (nyírószilárdság) és a megcsúsztató erők hányadosát','A rézsű magasságát méterben','A talaj térfogatsúlyát','Az eső intenzitását'],a:0,
   e:'F = Σ megtartó / Σ megcsúsztató a csúszólap mentén. F < 1 esetén a rézsű megcsúszik.'},
- {q:'Miért csökkenti a talajvíz (eső) a rézsű biztonságát?',
-  o:['Mert nehezebbé teszi a talajt, és ez segít','A pórusvíznyomás (u) csökkenti az effektív feszültséget, így a súrlódási ellenállás kisebb lesz','Mert a víz növeli a kohéziót','Nincs hatása az F-re'],a:1,
-  e:'σ′ = σ − u. A nagyobb u kisebb effektív normálfeszültséget, így kisebb (N−u·l)·tanφ′ súrlódási ellenállást ad.'},
+ {q:'Mely talajparaméterek adják a nyírószilárdságot (a megtartó erőt)?',
+  o:['A térfogatsúly (γ) és a magasság (H)','A kohézió (c′) és a belső súrlódási szög (φ′)','Csak a rézsűszög (β)','A lamellák száma'],a:1,
+  e:'Mohr–Coulomb: τ = c′ + σ′·tanφ′. A c′ és φ′ a talaj nyírószilárdsági alapadata — ezektől függ a megtartó erő, és így az egész F.'},
  {q:'Egy száraz, kohézió nélküli (homokos) rézsűnél melyik közelítés igaz a végtelen rézsűre?',
   o:['F = c′/γH','F = tanφ′ / tanβ','F = γ·H','F mindig 1,5'],a:1,
   e:'Tiszta szemcsés talajra, víz nélkül F = tanφ′/tanβ — ezért nem áll meg a száraz homok meredekebben φ′-nél.'},
